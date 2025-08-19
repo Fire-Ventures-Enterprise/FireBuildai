@@ -2,25 +2,82 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Phone, Mail, MapPin, Plus, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building } from "lucide-react";
+import { useState, useMemo } from "react";
 
 interface Client {
   id: string;
   name: string;
   email?: string;
   phone?: string;
+  secondaryPhone?: string;
+  address?: string;
   city?: string;
   state?: string;
+  zipCode?: string;
   totalSpent: number;
   rating: number;
   isActive: boolean;
+  lastContactDate?: Date;
   tags?: string[];
+  preferredContactMethod: string;
+  notes?: string;
   totalJobs: number;
+  completedJobs: number;
+  activeJobs: number;
+  lastJobDate?: Date;
+  createdAt: Date;
+}
+
+interface ClientJob {
+  id: string;
+  title: string;
+  description?: string;
+  totalAmount: number;
+  paidAmount: number;
+  status: string;
+  progress: number;
+  startDate?: Date;
+  dueDate?: Date;
+  completedDate?: Date;
+  contractorName?: string;
+  createdAt: Date;
+}
+
+interface ClientDocument {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  documentType: 'invoice' | 'estimate' | 'contract' | 'work_order';
+  documentName: string;
+  documentNumber?: string;
+  amount?: number;
+  status: string;
+  createdAt: Date;
+  signedAt?: Date;
+  documentUrl: string;
 }
 
 export default function Clients() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  
   const { data: clients, isLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
+  });
+
+  const { data: clientJobs } = useQuery<ClientJob[]>({
+    queryKey: ["/api/clients", selectedClient?.id, "jobs"],
+    enabled: !!selectedClient,
+  });
+
+  const { data: clientDocuments } = useQuery<ClientDocument[]>({
+    queryKey: ["/api/clients", selectedClient?.id, "documents"],
+    enabled: !!selectedClient,
   });
 
   const formatCurrency = (amount: number) => {
@@ -30,9 +87,48 @@ export default function Clients() {
     }).format(amount);
   };
 
+  const formatDate = (date: Date | string) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date(date));
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'planned':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+      case 'sent':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+  };
+
+  // Search functionality with document numbers using backend API
+  const { data: searchResults, isLoading: isSearching } = useQuery({
+    queryKey: ["/api/clients/search", searchTerm],
+    enabled: !!searchTerm.trim(),
+    staleTime: 1000, // Cache for 1 second
+  });
+
+  const filteredClients = useMemo(() => {
+    if (searchTerm.trim()) {
+      return searchResults || [];
+    }
+    return clients || [];
+  }, [clients, searchResults, searchTerm]);
 
   if (isLoading) {
     return (
@@ -73,8 +169,29 @@ export default function Clients() {
         </Button>
       </div>
 
+      {/* Search Bar */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          type="text"
+          placeholder="Search clients by name, address, phone, or document number..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+          data-testid="input-search-clients"
+        />
+      </div>
+
+      {/* Results count */}
+      {searchTerm && (
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Found {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''}
+          {searchTerm && ` matching "${searchTerm}"`}
+        </p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {clients?.map((client) => (
+        {filteredClients?.map((client) => (
           <Card key={client.id} className="hover:shadow-lg transition-shadow duration-200">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
@@ -163,22 +280,292 @@ export default function Clients() {
               )}
 
               <div className="flex gap-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 gap-2"
-                  data-testid={`button-view-details-${client.id}`}
-                >
-                  <Eye className="h-3 w-3" />
-                  View Details
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 gap-2"
+                      onClick={() => setSelectedClient(client)}
+                      data-testid={`button-view-details-${client.id}`}
+                    >
+                      <Eye className="h-3 w-3" />
+                      View Details
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                          <span className="text-blue-700 dark:text-blue-300 font-semibold">
+                            {getInitials(client.name)}
+                          </span>
+                        </div>
+                        {client.name}
+                      </DialogTitle>
+                      <DialogDescription>
+                        Complete client information and document history
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <Tabs defaultValue="overview" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+                        <TabsTrigger value="jobs" data-testid="tab-jobs">Jobs ({client.totalJobs})</TabsTrigger>
+                        <TabsTrigger value="documents" data-testid="tab-documents">Documents</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="overview" className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <User className="h-5 w-5" />
+                                Contact Information
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {client.email && (
+                                <div className="flex items-center gap-2">
+                                  <Mail className="h-4 w-4 text-gray-500" />
+                                  <span>{client.email}</span>
+                                </div>
+                              )}
+                              {client.phone && (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="h-4 w-4 text-gray-500" />
+                                  <span>{client.phone}</span>
+                                </div>
+                              )}
+                              {client.secondaryPhone && (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="h-4 w-4 text-gray-500" />
+                                  <span>{client.secondaryPhone} (Secondary)</span>
+                                </div>
+                              )}
+                              {(client.address || client.city) && (
+                                <div className="flex items-start gap-2">
+                                  <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                                  <div>
+                                    {client.address && <div>{client.address}</div>}
+                                    {(client.city || client.state || client.zipCode) && (
+                                      <div>
+                                        {client.city}{client.city && (client.state || client.zipCode) && ', '}
+                                        {client.state} {client.zipCode}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              <Separator />
+                              <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Preferred Contact</p>
+                                <p className="font-medium capitalize">{client.preferredContactMethod}</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <DollarSign className="h-5 w-5" />
+                                Business Summary
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                    {formatCurrency(client.totalSpent)}
+                                  </p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+                                </div>
+                                <div>
+                                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                    {client.totalJobs}
+                                  </p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Jobs</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {client.completedJobs}
+                                  </p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
+                                </div>
+                                <div>
+                                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {client.activeJobs}
+                                  </p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+                                </div>
+                              </div>
+                              {client.rating > 0 && (
+                                <div className="flex items-center gap-2">
+                                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="font-semibold">{client.rating.toFixed(1)}</span>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">Client Rating</span>
+                                </div>
+                              )}
+                              {client.lastContactDate && (
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-gray-500" />
+                                  <span className="text-sm">Last contact: {formatDate(client.lastContactDate)}</span>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {client.notes && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg">Notes</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-gray-700 dark:text-gray-300">{client.notes}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="jobs" className="space-y-4">
+                        {clientJobs && clientJobs.length > 0 ? (
+                          <div className="space-y-4">
+                            {clientJobs.map((job) => (
+                              <Card key={job.id}>
+                                <CardContent className="p-6">
+                                  <div className="flex items-start justify-between mb-4">
+                                    <div className="flex-1">
+                                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                                        {job.title}
+                                      </h4>
+                                      {job.description && (
+                                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                                          {job.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <Badge className={getStatusColor(job.status)}>
+                                      {job.status.replace('_', ' ').toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                    <div>
+                                      <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
+                                      <p className="font-semibold">{formatCurrency(job.totalAmount)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-500 dark:text-gray-400">Paid Amount</p>
+                                      <p className="font-semibold text-green-600">{formatCurrency(job.paidAmount)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-500 dark:text-gray-400">Progress</p>
+                                      <p className="font-semibold">{job.progress}%</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-gray-500 dark:text-gray-400">Contractor</p>
+                                      <p className="font-semibold">{job.contractorName || 'Unassigned'}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                    {job.startDate && (
+                                      <span>Started: {formatDate(job.startDate)}</span>
+                                    )}
+                                    {job.dueDate && (
+                                      <span>Due: {formatDate(job.dueDate)}</span>
+                                    )}
+                                    {job.completedDate && (
+                                      <span>Completed: {formatDate(job.completedDate)}</span>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <Card>
+                            <CardContent className="p-6 text-center">
+                              <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-500 dark:text-gray-400">No jobs found for this client</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="documents" className="space-y-4">
+                        {clientDocuments && clientDocuments.length > 0 ? (
+                          <div className="space-y-4">
+                            {clientDocuments.map((document) => (
+                              <Card key={document.id}>
+                                <CardContent className="p-6">
+                                  <div className="flex items-start justify-between mb-4">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <FileText className="h-4 w-4 text-gray-500" />
+                                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                                          {document.documentName}
+                                        </h4>
+                                        {document.documentNumber && (
+                                          <Badge variant="outline" className="ml-2">
+                                            #{document.documentNumber}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Job: {document.jobTitle}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <Badge className={getStatusColor(document.status)} variant="outline">
+                                        {document.status.toUpperCase()}
+                                      </Badge>
+                                      {document.amount && (
+                                        <p className="text-lg font-semibold text-gray-900 dark:text-white mt-2">
+                                          {formatCurrency(document.amount)}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                                    <div className="flex items-center gap-4">
+                                      <span>Type: {document.documentType.replace('_', ' ').toUpperCase()}</span>
+                                      <span>Created: {formatDate(document.createdAt)}</span>
+                                      {document.signedAt && (
+                                        <span>Signed: {formatDate(document.signedAt)}</span>
+                                      )}
+                                    </div>
+                                    <Button variant="outline" size="sm">
+                                      View PDF
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <Card>
+                            <CardContent className="p-6 text-center">
+                              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-500 dark:text-gray-400">No documents found for this client</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {clients?.length === 0 && (
+      {filteredClients?.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
             <div className="h-16 w-16 rounded-full bg-gray-400 dark:bg-gray-600 mx-auto mb-4 flex items-center justify-center">

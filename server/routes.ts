@@ -364,6 +364,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search clients with document numbers support
+  app.get("/api/clients/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Search query required" });
+      }
+      const clients = await storage.searchClients(q);
+      res.json(clients);
+    } catch (error) {
+      console.error("Error searching clients:", error);
+      res.status(500).json({ message: "Failed to search clients" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates
