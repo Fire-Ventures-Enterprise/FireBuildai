@@ -9,18 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanySettingsForm } from "@/components/CompanySettingsForm";
 import { FileText, Plus, Download, Send, Edit3, Settings, Files, Building2 } from "lucide-react";
-import type { DocumentTemplate, ClientDocument } from "@shared/schema";
+import type { DocumentTemplate, JobDocument } from "@shared/schema";
 
 export default function Documents() {
   const queryClient = useQueryClient();
   const companyId = "default"; // In a real app, this would come from user context
 
   // Queries
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading } = useQuery<DocumentTemplate[]>({
     queryKey: ["/api/document-templates"],
   });
 
-  const { data: documents = [], isLoading: documentsLoading } = useQuery({
+  const { data: documents = [], isLoading: documentsLoading } = useQuery<JobDocument[]>({
     queryKey: ["/api/client-documents"],
   });
 
@@ -44,22 +44,22 @@ export default function Documents() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" data-testid="documents-title">
+          <h1 className="text-3xl font-bold mb-2 text-foreground" data-testid="documents-title">
             Document Management
           </h1>
-          <p className="text-gray-400" data-testid="documents-subtitle">
+          <p className="text-muted-foreground" data-testid="documents-subtitle">
             Manage templates and generate documents for your projects
           </p>
         </div>
 
         <Tabs defaultValue="templates" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-800">
+          <TabsList className="grid w-full grid-cols-3 bg-muted">
             <TabsTrigger 
               value="templates" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600"
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
               data-testid="tab-templates"
             >
               <FileText className="h-4 w-4" />
@@ -67,7 +67,7 @@ export default function Documents() {
             </TabsTrigger>
             <TabsTrigger 
               value="documents" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600"
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
               data-testid="tab-documents"
             >
               <Files className="h-4 w-4" />
@@ -75,7 +75,7 @@ export default function Documents() {
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600"
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
               data-testid="tab-settings"
             >
               <Settings className="h-4 w-4" />
@@ -99,7 +99,7 @@ export default function Documents() {
                     isActive: true,
                   });
                 }}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
                 data-testid="button-create-template"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -113,16 +113,16 @@ export default function Documents() {
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {templates.map((template: DocumentTemplate) => (
-                  <Card key={template.id} className="bg-gray-800 border-gray-700 hover:shadow-md transition-shadow">
+                {templates.map((template) => (
+                  <Card key={template.id} className="bg-card border-border hover:shadow-md transition-shadow">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-base font-medium text-white" data-testid={`template-name-${template.id}`}>
+                        <CardTitle className="text-base font-medium text-card-foreground" data-testid={`template-name-${template.id}`}>
                           {template.name}
                         </CardTitle>
-                        <FileText className="h-5 w-5 text-blue-400" />
+                        <FileText className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <CardDescription className="text-gray-400" data-testid={`template-type-${template.id}`}>
+                      <CardDescription className="text-muted-foreground" data-testid={`template-type-${template.id}`}>
                         {template.type.replace("_", " ").toUpperCase()}
                       </CardDescription>
                     </CardHeader>
@@ -131,21 +131,20 @@ export default function Documents() {
                         <Badge 
                           variant={template.isActive ? "default" : "secondary"} 
                           data-testid={`template-status-${template.id}`}
-                          className={template.isActive ? "bg-green-600" : "bg-gray-600"}
                         >
                           {template.isActive ? "Active" : "Inactive"}
                         </Badge>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-gray-400 hover:text-white"
+                          className="text-muted-foreground hover:text-foreground"
                           data-testid={`button-edit-template-${template.id}`}
                         >
                           <Edit3 className="h-4 w-4" />
                         </Button>
                       </div>
                       {template.requiredFields && Array.isArray(template.requiredFields) && template.requiredFields.length > 0 && (
-                        <p className="text-xs text-gray-400 mt-2" data-testid={`template-fields-${template.id}`}>
+                        <p className="text-xs text-muted-foreground mt-2" data-testid={`template-fields-${template.id}`}>
                           Fields: {(template.requiredFields as string[]).join(", ")}
                         </p>
                       )}
@@ -171,7 +170,7 @@ export default function Documents() {
                     status: "draft",
                   });
                 }}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={templates.length === 0}
                 data-testid="button-generate-document"
               >
@@ -186,18 +185,18 @@ export default function Documents() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {documents.map((document: ClientDocument) => (
-                  <Card key={document.id} className="bg-gray-800 border-gray-700">
+                {documents.map((document) => (
+                  <Card key={document.id} className="bg-card border-border">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-base font-medium text-white" data-testid={`document-name-${document.id}`}>
+                        <CardTitle className="text-base font-medium text-card-foreground" data-testid={`document-name-${document.id}`}>
                           Document #{document.id}
                         </CardTitle>
                         <div className="flex space-x-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-blue-400 hover:text-blue-300"
+                            className="text-muted-foreground hover:text-foreground"
                             data-testid={`button-download-${document.id}`}
                           >
                             <Download className="h-4 w-4" />
@@ -205,32 +204,27 @@ export default function Documents() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-green-400 hover:text-green-300"
+                            className="text-muted-foreground hover:text-foreground"
                             data-testid={`button-send-${document.id}`}
                           >
                             <Send className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
-                      <CardDescription className="text-gray-400" data-testid={`document-client-${document.id}`}>
+                      <CardDescription className="text-muted-foreground" data-testid={`document-client-${document.id}`}>
                         Client ID: {document.clientId} | Job ID: {document.jobId}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <Badge 
-                          variant="secondary"
+                          variant={document.status === "signed" ? "default" : "secondary"}
                           data-testid={`document-status-${document.id}`}
-                          className={
-                            document.status === "signed" ? "bg-green-600" :
-                            document.status === "sent" ? "bg-blue-600" :
-                            "bg-gray-600"
-                          }
                         >
                           {document.status.toUpperCase()}
                         </Badge>
                         {document.createdAt && (
-                          <span className="text-xs text-gray-400" data-testid={`document-date-${document.id}`}>
+                          <span className="text-xs text-muted-foreground" data-testid={`document-date-${document.id}`}>
                             {new Date(document.createdAt).toLocaleDateString()}
                           </span>
                         )}

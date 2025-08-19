@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen text-white font-inter">
+    <div className="min-h-screen bg-background text-foreground font-inter">
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
