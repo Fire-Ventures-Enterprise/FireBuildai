@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireBuild - Complete Development Plan</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .fire-gradient { background: linear-gradient(135deg, #FF6B35, #FF8E53, #F7931E); }
+        .fire-text { color: #FF6B35; }
+        .fire-bg { background-color: #FF6B35; }
+        .fire-border { border-color: #FF6B35; }
+        .code-block { background: #1e1e1e; color: #d4d4d4; }
+        .section-header { background: linear-gradient(135deg, #FF6B35, #F7931E); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="fire-gradient text-white py-8">
+        <div class="container mx-auto px-6">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-2">🔥 FireBuild</h1>
+                <p class="text-xl opacity-90">Complete Technical Development Plan & Architecture</p>
+                <p class="text-sm opacity-75 mt-2">Comprehensive Contractor Management Platform with GPS Tracking & SMS</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex flex-wrap gap-4 text-sm">
+                <a href="#overview" class="fire-text hover:text-orange-600">Overview</a>
+                <a href="#tech-stack" class="fire-text hover:text-orange-600">Tech Stack</a>
+                <a href="#architecture" class="fire-text hover:text-orange-600">Architecture</a>
+                <a href="#file-structure" class="fire-text hover:text-orange-600">File Structure</a>
+                <a href="#database" class="fire-text hover:text-orange-600">Database</a>
+                <a href="#apis" class="fire-text hover:text-orange-600">APIs</a>
+                <a href="#location-tracking" class="fire-text hover:text-orange-600">Location Tracking</a>
+                <a href="#sms-system" class="fire-text hover:text-orange-600">SMS System</a>
+                <a href="#security" class="fire-text hover:text-orange-600">Security</a>
+                <a href="#deployment" class="fire-text hover:text-orange-600">Deployment</a>
+                <a href="#timeline" class="fire-text hover:text-orange-600">Timeline</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Project Overview -->
+        <section id="overview" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-rocket mr-2"></i>Project Overview</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 fire-text">Core Features</h3>
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-check fire-text mr-2"></i>Invoice Management & Payment Tracking</li>
+                            <li><i class="fas fa-check fire-text mr-2"></i>Estimates & Proposals Generation</li>
+                            <li><i class="fas fa-check fire-text mr-2"></i>Job Tracking & Schedule Management</li>
+                            <li><i class="fas fa-check fire-text mr-2"></i>Customer Email Notifications</li>
+                            <li><i class="fas fa-check fire-text mr-2"></i>Job Costing & Financial Reports</li>
+                            <li><i class="fas fa-check fire-text mr-2"></i>Real-time GPS Contractor Tracking</li>
+                            <li><i class="fas fa-check fire-text mr-2"></i>SMS Notifications with ETA Updates</li>
+                            <li><i class="fas fa-check fire-text mr-2"></i>Live Location Sharing</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 fire-text">Platform Requirements</h3>
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-mobile-alt fire-text mr-2"></i>Mobile App (iOS/Android)</li>
+                            <li><i class="fas fa-desktop fire-text mr-2"></i>Desktop Application</li>
+                            <li><i class="fas fa-sync fire-text mr-2"></i>Real-time Cross-platform Sync</li>
+                            <li><i class="fas fa-cloud fire-text mr-2"></i>Cloud-based Infrastructure</li>
+                            <li><i class="fas fa-shield-alt fire-text mr-2"></i>Enterprise-grade Security</li>
+                            <li><i class="fas fa-chart-line fire-text mr-2"></i>Scalable Architecture</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <section id="tech-stack" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-layer-group mr-2"></i>Technology Stack</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Frontend Technologies</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Mobile Apps:</strong>
+                                <p class="text-sm text-gray-600">React Native with Expo</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Desktop App:</strong>
+                                <p class="text-sm text-gray-600">Electron + React</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Web Dashboard:</strong>
+                                <p class="text-sm text-gray-600">React + TypeScript</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Styling:</strong>
+                                <p class="text-sm text-gray-600">Tailwind CSS + Styled Components</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Backend Technologies</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>API Server:</strong>
+                                <p class="text-sm text-gray-600">Node.js + Express + TypeScript</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Database:</strong>
+                                <p class="text-sm text-gray-600">PostgreSQL + Redis Cache</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Real-time:</strong>
+                                <p class="text-sm text-gray-600">Socket.io for live updates</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Authentication:</strong>
+                                <p class="text-sm text-gray-600">JWT + OAuth 2.0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Third-party Services</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>SMS Service:</strong>
+                                <p class="text-sm text-gray-600">Twilio API</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Maps & GPS:</strong>
+                                <p class="text-sm text-gray-600">Google Maps API + Mapbox</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>Payments:</strong>
+                                <p class="text-sm text-gray-600">Stripe + PayPal</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <strong>File Storage:</strong>
+                                <p class="text-sm text-gray-600">AWS S3 + CloudFront CDN</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture -->
+        <section id="architecture" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-sitemap mr-2"></i>System Architecture</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4 fire-text">Microservices Architecture</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="p-4 border-2 fire-border rounded-lg">
+                            <h4 class="font-semibold mb-2">Core Services</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• User Authentication Service</li>
+                                <li>• Job Management Service</li>
+                                <li>• Invoice & Payment Service</li>
+                                <li>• Notification Service</li>
+                                <li>• File Upload Service</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border-2 fire-border rounded-lg">
+                            <h4 class="font-semibold mb-2">Location Services</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• GPS Tracking Service</li>
+                                <li>• Route Optimization Service</li>
+                                <li>• Geofencing Service</li>
+                                <li>• ETA Calculation Service</li>
+                                <li>• SMS Notification Service</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold mb-2">Data Flow Architecture</h4>
+                    <p class="text-sm text-gray-600">Mobile App ↔ API Gateway ↔ Load Balancer ↔ Microservices ↔ Database Cluster ↔ Redis Cache ↔ WebSocket Server ↔ Real-time Updates</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- File Structure -->
+        <section id="file-structure" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-folder-tree mr-2"></i>Project File Structure</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Mobile App Structure</h3>
+                        <div class="code-block p-4 rounded-lg text-sm overflow-x-auto">
+<pre>firebuild-mobile/
+├── src/
+│   ├── components/
+│   │   ├── common/
+│   │   ├── forms/
+│   │   ├── navigation/
+│   │   └── location/
+│   ├── screens/
+│   │   ├── auth/
+│   │   ├── dashboard/
+│   │   ├── jobs/
+│   │   ├── invoices/
+│   │   ├── tracking/
+│   │   └── settings/
+│   ├── services/
+│   │   ├── api/
+│   │   ├── auth/
+│   │   ├── location/
+│   │   ├── notifications/
+│   │   └── sync/
+│   ├── utils/
+│   ├── hooks/
+│   ├── context/
+│   └── types/
+├── assets/
+├── config/
+└── package.json</pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Backend API Structure</h3>
+                        <div class="code-block p-4 rounded-lg text-sm overflow-x-auto">
+<pre>firebuild-api/
+├── src/
+│   ├── controllers/
+│   │   ├── auth.controller.ts
+│   │   ├── jobs.controller.ts
+│   │   ├── invoices.controller.ts
+│   │   ├── tracking.controller.ts
+│   │   └── sms.controller.ts
+│   ├── services/
+│   │   ├── auth.service.ts
+│   │   ├── location.service.ts
+│   │   ├── sms.service.ts
+│   │   └── sync.service.ts
+│   ├── models/
+│   ├── middleware/
+│   ├── routes/
+│   ├── utils/
+│   └── types/
+├── config/
+├── migrations/
+└── package.json</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Database Schema -->
+        <section id="database" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-database mr-2"></i>Database Schema</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Core Tables</h3>
+                        <div class="space-y-4">
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>users</strong>
+                                <p class="text-sm">id, email, password, role, company_id, profile_data, created_at</p>
+                            </div>
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>jobs</strong>
+                                <p class="text-sm">id, user_id, customer_id, title, description, status, scheduled_date, location, created_at</p>
+                            </div>
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>invoices</strong>
+                                <p class="text-sm">id, job_id, amount, status, due_date, paid_date, payment_method</p>
+                            </div>
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>customers</strong>
+                                <p class="text-sm">id, user_id, name, email, phone, address, preferences</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Location & SMS Tables</h3>
+                        <div class="space-y-4">
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>location_tracking</strong>
+                                <p class="text-sm">id, user_id, job_id, latitude, longitude, accuracy, timestamp, speed</p>
+                            </div>
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>sms_notifications</strong>
+                                <p class="text-sm">id, job_id, customer_phone, message, status, sent_at, delivery_status</p>
+                            </div>
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>routes</strong>
+                                <p class="text-sm">id, user_id, start_location, end_location, waypoints, distance, duration</p>
+                            </div>
+                            <div class="p-3 border-l-4 fire-border bg-orange-50">
+                                <strong>geofences</strong>
+                                <p class="text-sm">id, job_id, center_lat, center_lng, radius, entry_time, exit_time</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Endpoints -->
+        <section id="apis" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-code mr-2"></i>API Endpoints</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Core APIs</h3>
+                        <div class="code-block p-4 rounded-lg text-sm overflow-x-auto">
+<pre>// Authentication
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/refresh
+DELETE /api/auth/logout
+
+// Jobs Management
+GET /api/jobs
+POST /api/jobs
+PUT /api/jobs/:id
+DELETE /api/jobs/:id
+GET /api/jobs/:id/timeline
+
+// Invoices
+GET /api/invoices
+POST /api/invoices
+PUT /api/invoices/:id
+POST /api/invoices/:id/payment
+
+// Customers
+GET /api/customers
+POST /api/customers
+PUT /api/customers/:id</pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Location & SMS APIs</h3>
+                        <div class="code-block p-4 rounded-lg text-sm overflow-x-auto">
+<pre>// Location Tracking
+POST /api/tracking/location
+GET /api/tracking/jobs/:id/route
+POST /api/tracking/start-job/:id
+POST /api/tracking/end-job/:id
+
+// SMS Notifications
+POST /api/sms/send-eta
+POST /api/sms/send-arrival
+GET /api/sms/delivery-status/:id
+
+// Route Optimization
+POST /api/routes/optimize
+GET /api/routes/eta/:jobId
+
+// Geofencing
+POST /api/geofences
+GET /api/geofences/job/:id</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Location Tracking System -->
+        <section id="location-tracking" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-map-marker-alt mr-2"></i>GPS Location Tracking System</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4 fire-text">Core Location Features</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <h4 class="font-semibold text-blue-800">Real-time GPS Tracking</h4>
+                            <p class="text-sm text-blue-600 mt-2">Continuous location updates with 30-second intervals during active jobs</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <h4 class="font-semibold text-green-800">Route Optimization</h4>
+                            <p class="text-sm text-green-600 mt-2">Google Maps integration for fastest routes and multiple stops</p>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-lg">
+                            <h4 class="font-semibold text-purple-800">Geofencing</h4>
+                            <p class="text-sm text-purple-600 mt-2">Automatic job start/end when entering/leaving job sites</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4 fire-text">Location Service Implementation</h3>
+                    <div class="code-block p-4 rounded-lg text-sm overflow-x-auto">
+<pre>// Location Service Class
+class LocationTrackingService {
+  startTracking(jobId: string) {
+    // Initialize GPS tracking
+    // Set 30-second update intervals
+    // Send location updates to server
+  }
+
+  calculateETA(destination: Location) {
+    // Use Google Maps Distance Matrix API
+    // Factor in current traffic conditions
+    // Return estimated arrival time
+  }
+
+  setupGeofence(jobLocation: Location, radius: number) {
+    // Create virtual fence around job site
+    // Monitor entry/exit events
+    // Trigger automatic notifications
+  }
+
+  optimizeRoute(stops: Location[]) {
+    // Use Google Maps Directions API
+    // Find most efficient route
+    // Return optimized waypoints
+  }
+}</pre>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 fire-text">Battery Optimization Features</h3>
+                    <ul class="space-y-2">
+                        <li><i class="fas fa-battery-three-quarters text-green-500 mr-2"></i>Intelligent tracking intervals (slower when stationary)</li>
+                        <li><i class="fas fa-battery-three-quarters text-green-500 mr-2"></i>Background location updates only during active jobs</li>
+                        <li><i class="fas fa-battery-three-quarters text-green-500 mr-2"></i>Automatic tracking pause when job is completed</li>
+                        <li><i class="fas fa-battery-three-quarters text-green-500 mr-2"></i>Low-power mode for extended battery life</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SMS Notification System -->
+        <section id="sms-system" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-sms mr-2"></i>SMS Notification System</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4 fire-text">Automated SMS Workflows</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="p-4 border-l-4 border-blue-500 bg-blue-50">
+                                <h4 class="font-semibold text-blue-800">Job Dispatch SMS</h4>
+                                <p class="text-sm text-blue-600">"Hi Sarah! Your contractor Mike from FireBuild Plumbing has been dispatched to 123 Main St. ETA: 25 minutes. Track live: [link]"</p>
+                            </div>
+                            <div class="p-4 border-l-4 border-green-500 bg-green-50">
+                                <h4 class="font-semibold text-green-800">ETA Update SMS</h4>
+                                <p class="text-sm text-green-600">"Update: Mike is running 10 minutes late due to traffic. New ETA: 3:40 PM. Track progress: [link]"</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 border-l-4 border-orange-500 bg-orange-50">
+                                <h4 class="font-semibold text-orange-800">Arrival SMS</h4>
+                                <p class="text-sm text-orange-600">"Mike has arrived at your location and is ready to start work. Job #FB-2024-001"</p>
+                            </div>
+                            <div class="p-4 border-l-4 border-purple-500 bg-purple-50">
+                                <h4 class="font-semibold text-purple-800">Completion SMS</h4>
+                                <p class="text-sm text-purple-600">"Job completed! Total time: 2.5 hours. Invoice will be sent shortly. Rate your experience: [link]"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4 fire-text">SMS Service Implementation</h3>
+                    <div class="code-block p-4 rounded-lg text-sm overflow-x-auto">
+<pre>// SMS Service using Twilio
+class SMSNotificationService {
+  async sendETANotification(customer: Customer, contractor: User, eta: number) {
+    const message = `Hi ${customer.name}! Your contractor ${contractor.name} 
+    is on the way to ${customer.address}. ETA: ${eta} minutes. 
+    Track live: ${this.generateTrackingLink(contractor.id)}`;
+    
+    await this.twilioClient.messages.create({
+      body: message,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: customer.phone
+    });
+  }
+
+  async sendArrivalNotification(customer: Customer, contractor: User) {
+    const message = `${contractor.name} has arrived at your location 
+    and is ready to start work. Job #${job.id}`;
+    
+    await this.sendSMS(customer.phone, message);
+  }
+
+  generateTrackingLink(contractorId: string): string {
+    return `https://firebuild.ai/track/${contractorId}`;
+  }
+}</pre>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 fire-text">SMS Features</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Two-way SMS communication</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Delivery status tracking</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Failed message retry logic</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Customizable message templates</li>
+                        </ul>
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>International SMS support</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>SMS analytics and reporting</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Opt-out management</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>Rate limiting and spam protection</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security -->
+        <section id="security" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-shield-alt mr-2"></i>Security & Compliance</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Authentication & Authorization</h3>
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>JWT-based authentication</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>Role-based access control (RBAC)</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>Multi-factor authentication (MFA)</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>OAuth 2.0 integration</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>Session management</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Data Protection</h3>
+                        <ul class="space-y-2">
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>AES-256 encryption at rest</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>TLS 1.3 encryption in transit</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>Database encryption</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>PCI DSS compliance for payments</li>
+                            <li><i class="fas fa-lock text-green-500 mr-2"></i>GDPR compliance for location data</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold mb-4 fire-text">Location Data Privacy</h3>
+                    <div class="p-4 bg-yellow-50 border-l-4 border-yellow-500">
+                        <ul class="space-y-1 text-sm">
+                            <li>• Location data only collected during active job hours</li>
+                            <li>• Automatic data purging after 90 days</li>
+                            <li>• Granular location permissions</li>
+                            <li>• Customer consent management</li>
+                            <li>• Location data anonymization options</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deployment -->
+        <section id="deployment" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-cloud mr-2"></i>Deployment & Infrastructure</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Cloud Infrastructure</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-blue-50 rounded">
+                                <strong>Primary Hosting:</strong>
+                                <p class="text-sm text-gray-600">AWS ECS with auto-scaling</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded">
+                                <strong>Database:</strong>
+                                <p class="text-sm text-gray-600">AWS RDS PostgreSQL Multi-AZ</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded">
+                                <strong>Cache:</strong>
+                                <p class="text-sm text-gray-600">AWS ElastiCache Redis</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded">
+                                <strong>CDN:</strong>
+                                <p class="text-sm text-gray-600">CloudFront for global delivery</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Monitoring & DevOps</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-green-50 rounded">
+                                <strong>CI/CD Pipeline:</strong>
+                                <p class="text-sm text-gray-600">GitHub Actions + Docker</p>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded">
+                                <strong>Monitoring:</strong>
+                                <p class="text-sm text-gray-600">AWS CloudWatch + DataDog</p>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded">
+                                <strong>Error Tracking:</strong>
+                                <p class="text-sm text-gray-600">Sentry for real-time errors</p>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded">
+                                <strong>Load Balancing:</strong>
+                                <p class="text-sm text-gray-600">AWS Application Load Balancer</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Timeline -->
+        <section id="timeline" class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-calendar-alt mr-2"></i>Development Timeline & Phases</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="fire-bg text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">1</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold fire-text">Phase 1: Foundation (Weeks 1-4)</h3>
+                            <ul class="text-sm space-y-1 mt-2">
+                                <li>• Project setup and architecture</li>
+                                <li>• Basic authentication system</li>
+                                <li>• Database schema implementation</li>
+                                <li>• Core API endpoints</li>
+                                <li>• Basic mobile app structure</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="fire-bg text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">2</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold fire-text">Phase 2: Core Features (Weeks 5-10)</h3>
+                            <ul class="text-sm space-y-1 mt-2">
+                                <li>• Job management system</li>
+                                <li>• Invoice and payment processing</li>
+                                <li>• Customer management</li>
+                                <li>• Basic scheduling features</li>
+                                <li>• Email notifications</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="fire-bg text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">3</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold fire-text">Phase 3: Location Tracking (Weeks 11-16)</h3>
+                            <ul class="text-sm space-y-1 mt-2">
+                                <li>• GPS tracking implementation</li>
+                                <li>• Google Maps integration</li>
+                                <li>• Route optimization</li>
+                                <li>• Geofencing features</li>
+                                <li>• Real-time location updates</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="fire-bg text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">4</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold fire-text">Phase 4: SMS & Notifications (Weeks 17-20)</h3>
+                            <ul class="text-sm space-y-1 mt-2">
+                                <li>• Twilio SMS integration</li>
+                                <li>• Automated ETA notifications</li>
+                                <li>• Customer tracking portal</li>
+                                <li>• Two-way messaging</li>
+                                <li>• Notification preferences</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="fire-bg text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">5</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold fire-text">Phase 5: Desktop App & Polish (Weeks 21-24)</h3>
+                            <ul class="text-sm space-y-1 mt-2">
+                                <li>• Electron desktop application</li>
+                                <li>• Cross-platform sync optimization</li>
+                                <li>• Advanced reporting features</li>
+                                <li>• Performance optimization</li>
+                                <li>• Beta testing and bug fixes</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="fire-bg text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">6</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold fire-text">Phase 6: Launch Preparation (Weeks 25-26)</h3>
+                            <ul class="text-sm space-y-1 mt-2">
+                                <li>• Security audit and penetration testing</li>
+                                <li>• Performance stress testing</li>
+                                <li>• App store submissions</li>
+                                <li>• Production deployment</li>
+                                <li>• Launch marketing materials</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 p-4 fire-gradient text-white rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">🚀 Estimated Total Timeline: 6 Months</h3>
+                    <p class="text-sm opacity-90">This timeline assumes a dedicated team of 4-6 developers working full-time on the project. Adjustments may be needed based on specific requirements and team availability.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost Estimation -->
+        <section class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-dollar-sign mr-2"></i>Development Cost Estimation</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Team Structure & Costs</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>Lead Developer (Full-stack)</span>
+                                <span class="font-semibold">$15,000/month</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>Mobile Developer (React Native)</span>
+                                <span class="font-semibold">$12,000/month</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>Backend Developer (Node.js)</span>
+                                <span class="font-semibold">$11,000/month</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>UI/UX Designer</span>
+                                <span class="font-semibold">$8,000/month</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>DevOps Engineer</span>
+                                <span class="font-semibold">$10,000/month</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Additional Costs</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>AWS Infrastructure (monthly)</span>
+                                <span class="font-semibold">$2,000/month</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>Third-party APIs (Twilio, Maps)</span>
+                                <span class="font-semibold">$1,500/month</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>Security & Compliance Audit</span>
+                                <span class="font-semibold">$25,000 one-time</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded">
+                                <span>App Store Fees & Certificates</span>
+                                <span class="font-semibold">$500/year</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 p-4 fire-bg text-white rounded-lg">
+                            <h4 class="font-semibold mb-2">Total Estimated Cost</h4>
+                            <p class="text-2xl font-bold">$366,000 - $400,000</p>
+                            <p class="text-sm opacity-90">6-month development period</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="mb-12">
+            <div class="section-header text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold"><i class="fas fa-forward mr-2"></i>Next Steps & Recommendations</h2>
+            </div>
+            <div class="bg-white p-6 rounded-b-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Immediate Actions</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-check-circle fire-text mt-1"></i>
+                                <span>Secure firebuild.com domain and social handles</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-check-circle fire-text mt-1"></i>
+                                <span>Register AWS account and set up initial infrastructure</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-check-circle fire-text mt-1"></i>
+                                <span>Set up Twilio account for SMS services</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-check-circle fire-text mt-1"></i>
+                                <span>Create Google Cloud account for Maps APIs</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-check-circle fire-text mt-1"></i>
+                                <span>Begin interviewing development teams</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 fire-text">Key Decisions</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mt-1"></i>
+                                <span>Choose between in-house team vs agency development</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mt-1"></i>
+                                <span>Decide on MVP feature set vs full feature launch</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mt-1"></i>
+                                <span>Determine pricing model and subscription tiers</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mt-1"></i>
+                                <span>Plan beta testing strategy with real contractors</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mt-1"></i>
+                                <span>Design go-to-market strategy and initial customer acquisition</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="fire-gradient text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-2xl font-bold mb-2">🔥 FireBuild Development Plan</h3>
+            <p class="opacity-90">Complete Technical Specification for Contractor Management Platform</p>
+            <p class="text-sm opacity-75 mt-4">© 2024 Fire Ventures Enterprise - Confidential Technical Document</p>
+        </div>
+    </footer>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"97160db93e4d36d2","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.8.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDsEyXy26i2ssS44lPr4FKpO0GLaESLl41RCc7FNj4WVcwnOQE20gFUqWAt1bWvlxGEAn74KoWMH%2BIgKyMPbgDFPwwPjZIbCXaeJshhC2AxOOKVatga%2BArKlgfu5dcTGSp6cE28Gw4Do6G8EymExJxF6ZphjJ84R9dvNe2a3mD6xOnjrwFsi2gdkLJYHXy%2Byph3qP3Rr2jTn3xYx6yWts4Wjmy2EMX3MvE3mELYbUYd45NgwPLGR6ZCecZKfBxs8Cy387c4g1zVjKvCtkx4hfJI1m9MtwbOPGBGQlWJTg%2BcjRo4ctX9T%2Fdr1U89nk2ZWRZLAlX3R8KETJrWmhQNTfEYdMNI%2FQTVy%2BDBYRKMz%2BR9qDtyGdBfhBCvkawxN7SecJAWVZvFBt3J6ZBgyZltAQuGpRmfxLn9%2B0CZHoeYJiRcXZQOBqF2BSYdACBhiJzYvbyaypImkTe3yKhjlMnorsYuG52Kyj6fCj4nClyUzWrdLvHREx1PAW%2Fzl8TqZlf%2BXI%2F9md1%2BOgbttVKw20yIRs51o%3D";
+        window.__genspark_locale = "en-US";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDsEyXy26i2ssS44lPr4FKpO0GLaESLl41RCc7FNj4WVcwnOQE20gFUqWAt1bWvlxGEAn74KoWMH+IgKyMPbgDFPwwPjZIbCXaeJshhC2AxOOKVatga+ArKlgfu5dcTGSp6cE28Gw4Do6G8EymExJxF6ZphjJ84R9dvNe2a3mD6xOnjrwFsi2gdkLJYHXy+yph3qP3Rr2jTn3xYx6yWts4Wjmy2EMX3MvE3mELYbUYd45NgwPLGR6ZCecZKfBxs8Cy387c4g1zVjKvCtkx4hfJI1m9MtwbOPGBGQlWJTg+cjRo4ctX9T/dr1U89nk2ZWRZLAlX3R8KETJrWmhQNTfEYdMNI/QTVy+DBYRKMz+R9qDtyGdBfhBCvkawxN7SecJAWVZvFBt3J6ZBgyZltAQuGpRmfxLn9+0CZHoeYJiRcXZQOBqF2BSYdACBhiJzYvbyaypImkTe3yKhjlMnorsYuG52Kyj6fCj4nClyUzWrdLvHREx1PAW/zl8TqZlf+XI/9md1+OgbttVKw20yIRs51o=";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
