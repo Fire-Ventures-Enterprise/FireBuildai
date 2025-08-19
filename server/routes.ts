@@ -300,6 +300,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client Management Routes
+  app.get("/api/clients", async (req, res) => {
+    try {
+      const clients = await storage.getAllClients();
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
+  app.get("/api/clients/:id", async (req, res) => {
+    try {
+      const client = await storage.getClient(req.params.id);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      res.json(client);
+    } catch (error) {
+      console.error("Error fetching client:", error);
+      res.status(500).json({ message: "Failed to fetch client" });
+    }
+  });
+
+  app.get("/api/clients/:id/jobs", async (req, res) => {
+    try {
+      const jobs = await storage.getClientJobs(req.params.id);
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching client jobs:", error);
+      res.status(500).json({ message: "Failed to fetch client jobs" });
+    }
+  });
+
+  app.get("/api/clients/:id/documents", async (req, res) => {
+    try {
+      const documents = await storage.getClientInvoicesAndEstimates(req.params.id);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching client documents:", error);
+      res.status(500).json({ message: "Failed to fetch client documents" });
+    }
+  });
+
+  app.post("/api/clients", async (req, res) => {
+    try {
+      const client = await storage.createClient(req.body);
+      res.status(201).json(client);
+    } catch (error) {
+      console.error("Error creating client:", error);
+      res.status(500).json({ message: "Failed to create client" });
+    }
+  });
+
+  app.put("/api/clients/:id", async (req, res) => {
+    try {
+      const client = await storage.updateClient(req.params.id, req.body);
+      res.json(client);
+    } catch (error) {
+      console.error("Error updating client:", error);
+      res.status(500).json({ message: "Failed to update client" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates

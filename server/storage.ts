@@ -18,7 +18,9 @@ import {
   type JobDocument,
   type InsertJobDocument,
   type CompanySettings,
-  type InsertCompanySettings
+  type InsertCompanySettings,
+  type Client,
+  type InsertClient
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -164,6 +166,65 @@ export interface IStorage {
   }>>;
   getAllClientDocuments(): Promise<any[]>;
   createClientDocument(document: any): Promise<any>;
+
+  // Client Management
+  getAllClients(): Promise<Array<{
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    secondaryPhone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    totalSpent: number;
+    rating: number;
+    isActive: boolean;
+    lastContactDate?: Date;
+    tags?: string[];
+    preferredContactMethod: string;
+    notes?: string;
+    jobsCount: number;
+    totalJobs: number;
+    completedJobs: number;
+    activeJobs: number;
+    lastJobDate?: Date;
+    createdAt: Date;
+  }>>;
+  getClient(clientId: string): Promise<Client | null>;
+  createClient(client: InsertClient): Promise<Client>;
+  updateClient(clientId: string, updates: Partial<Client>): Promise<Client>;
+  
+  // Client Job History
+  getClientJobs(clientId: string): Promise<Array<{
+    id: string;
+    title: string;
+    description?: string;
+    totalAmount: number;
+    paidAmount: number;
+    status: string;
+    progress: number;
+    startDate?: Date;
+    dueDate?: Date;
+    completedDate?: Date;
+    contractorName?: string;
+    createdAt: Date;
+  }>>;
+
+  // Client Documents & Invoices
+  getClientInvoicesAndEstimates(clientId: string): Promise<Array<{
+    id: string;
+    jobId: string;
+    jobTitle: string;
+    documentType: 'invoice' | 'estimate' | 'contract' | 'work_order';
+    documentName: string;
+    amount?: number;
+    status: string;
+    createdAt: Date;
+    signedAt?: Date;
+    documentUrl: string;
+  }>>;
 }
 
 export class MemStorage implements IStorage {
@@ -177,6 +238,7 @@ export class MemStorage implements IStorage {
   private documentTemplates: Map<string, DocumentTemplate> = new Map();
   private jobDocuments: Map<string, JobDocument> = new Map();
   private companySettings: Map<string, CompanySettings> = new Map();
+  private clients: Map<string, Client> = new Map();
 
   constructor() {
     this.initializeMockData();
@@ -492,6 +554,116 @@ export class MemStorage implements IStorage {
     };
 
     this.companySettings.set(defaultCompanySettings.companyId, defaultCompanySettings);
+
+    // Initialize clients based on job data
+    const client1: Client = {
+      id: randomUUID(),
+      companyId: "company-1",
+      name: "Johnson Family",
+      email: "johnson@email.com",
+      phone: "(555) 987-6543",
+      secondaryPhone: "(555) 876-5432",
+      address: "123 Oak St",
+      city: "Builderville",
+      state: "CA",
+      zipCode: "90210",
+      preferredContactMethod: "email",
+      notes: "VIP client - Kitchen renovation project. Very satisfied with work quality.",
+      tags: ["VIP", "Residential", "Repeat Customer"],
+      rating: "4.9",
+      totalSpent: "12500.00",
+      isActive: true,
+      lastContactDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    const client2: Client = {
+      id: randomUUID(),
+      companyId: "company-1",
+      name: "Smith Family Home",
+      email: "smith@email.com",
+      phone: "(555) 876-5432",
+      secondaryPhone: null,
+      address: "456 Pine Ave",
+      city: "Builderville",
+      state: "CA",
+      zipCode: "90211",
+      preferredContactMethod: "phone",
+      notes: "Master bathroom renovation. Excellent communication throughout project.",
+      tags: ["Residential", "Bathroom Specialist"],
+      rating: "4.8",
+      totalSpent: "8750.00",
+      isActive: true,
+      lastContactDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    const client3: Client = {
+      id: randomUUID(),
+      companyId: "company-1",
+      name: "Williams Property",
+      email: "williams@email.com",
+      phone: "(555) 765-4321",
+      secondaryPhone: "(555) 654-3210",
+      address: "789 Maple Dr",
+      city: "Builderville",
+      state: "CA",
+      zipCode: "90212",
+      preferredContactMethod: "phone",
+      notes: "Commercial property owner. Deck installation project planned for next month.",
+      tags: ["Commercial", "Property Manager"],
+      rating: "0.00",
+      totalSpent: "0.00",
+      isActive: true,
+      lastContactDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    const client4: Client = {
+      id: randomUUID(),
+      companyId: "company-1",
+      name: "Davis Corporation",
+      email: "facility@davis-corp.com",
+      phone: "(555) 654-3210",
+      secondaryPhone: "(555) 543-2109",
+      address: "321 Business Blvd",
+      city: "Commerce City",
+      state: "CA",
+      zipCode: "90213",
+      preferredContactMethod: "email",
+      notes: "Large commercial client. Multiple ongoing projects including office renovations.",
+      tags: ["Commercial", "Multi-Project", "High Value"],
+      rating: "4.7",
+      totalSpent: "45000.00",
+      isActive: true,
+      lastContactDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    this.clients.set(client1.id, client1);
+    this.clients.set(client2.id, client2);
+    this.clients.set(client3.id, client3);
+    this.clients.set(client4.id, client4);
+
+    // Update job data to reference clients
+    job1.clientName = client1.name;
+    job1.clientPhone = client1.phone;
+    job1.clientEmail = client1.email;
+    job1.clientAddress = `${client1.address}, ${client1.city}, ${client1.state} ${client1.zipCode}`;
+    
+    job2.clientName = client2.name;
+    job2.clientPhone = client2.phone;
+    job2.clientEmail = client2.email;
+    job2.clientAddress = `${client2.address}, ${client2.city}, ${client2.state} ${client2.zipCode}`;
+    
+    job3.clientName = client3.name;
+    job3.clientPhone = client3.phone;
+    job3.clientEmail = client3.email;
+    job3.clientAddress = `${client3.address}, ${client3.city}, ${client3.state} ${client3.zipCode}`;
 
     // Initialize document templates
     const invoiceTemplate: DocumentTemplate = {
@@ -898,6 +1070,76 @@ export class MemStorage implements IStorage {
 
     this.documentTemplates.set(invoiceTemplate.id, invoiceTemplate);
     this.documentTemplates.set(estimateTemplate.id, estimateTemplate);
+
+    // Initialize some job documents for clients
+    const jobDoc1: JobDocument = {
+      id: randomUUID(),
+      jobId: job1.id,
+      templateId: invoiceTemplate.id,
+      documentName: `Invoice #INV-2024-001 - ${job1.title}`,
+      documentType: 'invoice',
+      documentUrl: '/documents/invoice-001.pdf',
+      status: 'completed',
+      signedBy: 'Johnson Family',
+      signedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      isClientVisible: true,
+      formData: { invoiceNumber: 'INV-2024-001', amount: 12500 },
+      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    const jobDoc2: JobDocument = {
+      id: randomUUID(),
+      jobId: job2.id,
+      templateId: estimateTemplate.id,
+      documentName: `Estimate #EST-2024-002 - ${job2.title}`,
+      documentType: 'estimate',
+      documentUrl: '/documents/estimate-002.pdf',
+      status: 'sent',
+      signedBy: null,
+      signedAt: null,
+      isClientVisible: true,
+      formData: { estimateNumber: 'EST-2024-002', amount: 8750 },
+      createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    const jobDoc3: JobDocument = {
+      id: randomUUID(),
+      jobId: job3.id,
+      templateId: estimateTemplate.id,
+      documentName: `Estimate #EST-2024-003 - ${job3.title}`,
+      documentType: 'estimate',
+      documentUrl: '/documents/estimate-003.pdf',
+      status: 'draft',
+      signedBy: null,
+      signedAt: null,
+      isClientVisible: true,
+      formData: { estimateNumber: 'EST-2024-003', amount: 15200 },
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    const jobDoc4: JobDocument = {
+      id: randomUUID(),
+      jobId: job1.id,
+      templateId: invoiceTemplate.id,
+      documentName: `Work Order #WO-2024-001 - ${job1.title}`,
+      documentType: 'work_order',
+      documentUrl: '/documents/work-order-001.pdf',
+      status: 'completed',
+      signedBy: 'Johnson Family',
+      signedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      isClientVisible: true,
+      formData: { workOrderNumber: 'WO-2024-001' },
+      createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(),
+    };
+
+    this.jobDocuments.set(jobDoc1.id, jobDoc1);
+    this.jobDocuments.set(jobDoc2.id, jobDoc2);
+    this.jobDocuments.set(jobDoc3.id, jobDoc3);
+    this.jobDocuments.set(jobDoc4.id, jobDoc4);
     this.documentTemplates.set(stopWorkTemplate.id, stopWorkTemplate);
     this.documentTemplates.set(workOrderTemplate.id, workOrderTemplate);
     this.documentTemplates.set(collectionTemplate.id, collectionTemplate);
@@ -1318,6 +1560,181 @@ export class MemStorage implements IStorage {
     
     this.jobDocuments.set(newDocument.id, newDocument);
     return newDocument;
+  }
+
+  // Client Management Methods
+  async getAllClients(): Promise<Array<{
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    secondaryPhone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    totalSpent: number;
+    rating: number;
+    isActive: boolean;
+    lastContactDate?: Date;
+    tags?: string[];
+    preferredContactMethod: string;
+    notes?: string;
+    jobsCount: number;
+    totalJobs: number;
+    completedJobs: number;
+    activeJobs: number;
+    lastJobDate?: Date;
+    createdAt: Date;
+  }>> {
+    const clients = Array.from(this.clients.values());
+    const jobs = Array.from(this.jobs.values());
+    
+    return clients.map(client => {
+      const clientJobs = jobs.filter(job => job.clientName === client.name);
+      const completedJobs = clientJobs.filter(job => job.status === 'completed');
+      const activeJobs = clientJobs.filter(job => job.status === 'in_progress' || job.status === 'planned');
+      const lastJob = clientJobs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+      
+      return {
+        id: client.id,
+        name: client.name,
+        email: client.email || undefined,
+        phone: client.phone || undefined,
+        secondaryPhone: client.secondaryPhone || undefined,
+        address: client.address || undefined,
+        city: client.city || undefined,
+        state: client.state || undefined,
+        zipCode: client.zipCode || undefined,
+        totalSpent: parseFloat(client.totalSpent),
+        rating: parseFloat(client.rating),
+        isActive: client.isActive,
+        lastContactDate: client.lastContactDate || undefined,
+        tags: client.tags as string[] || [],
+        preferredContactMethod: client.preferredContactMethod,
+        notes: client.notes || undefined,
+        jobsCount: clientJobs.length,
+        totalJobs: clientJobs.length,
+        completedJobs: completedJobs.length,
+        activeJobs: activeJobs.length,
+        lastJobDate: lastJob?.createdAt || undefined,
+        createdAt: client.createdAt,
+      };
+    }).sort((a, b) => b.lastContactDate?.getTime() - a.lastContactDate?.getTime() || b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getClient(clientId: string): Promise<Client | null> {
+    return this.clients.get(clientId) || null;
+  }
+
+  async createClient(clientData: InsertClient): Promise<Client> {
+    const client: Client = {
+      id: randomUUID(),
+      ...clientData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.clients.set(client.id, client);
+    return client;
+  }
+
+  async updateClient(clientId: string, updates: Partial<Client>): Promise<Client> {
+    const existingClient = this.clients.get(clientId);
+    if (!existingClient) {
+      throw new Error("Client not found");
+    }
+
+    const updatedClient: Client = {
+      ...existingClient,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.clients.set(clientId, updatedClient);
+    return updatedClient;
+  }
+
+  async getClientJobs(clientId: string): Promise<Array<{
+    id: string;
+    title: string;
+    description?: string;
+    totalAmount: number;
+    paidAmount: number;
+    status: string;
+    progress: number;
+    startDate?: Date;
+    dueDate?: Date;
+    completedDate?: Date;
+    contractorName?: string;
+    createdAt: Date;
+  }>> {
+    const client = this.clients.get(clientId);
+    if (!client) return [];
+
+    const jobs = Array.from(this.jobs.values())
+      .filter(job => job.clientName === client.name)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    const contractors = Array.from(this.contractors.values());
+
+    return jobs.map(job => {
+      const contractor = contractors.find(c => c.id === job.contractorId);
+      return {
+        id: job.id,
+        title: job.title,
+        description: job.description || undefined,
+        totalAmount: parseFloat(job.totalAmount),
+        paidAmount: parseFloat(job.paidAmount),
+        status: job.status,
+        progress: job.progress,
+        startDate: job.startDate || undefined,
+        dueDate: job.dueDate || undefined,
+        completedDate: job.completedDate || undefined,
+        contractorName: contractor?.name || undefined,
+        createdAt: job.createdAt,
+      };
+    });
+  }
+
+  async getClientInvoicesAndEstimates(clientId: string): Promise<Array<{
+    id: string;
+    jobId: string;
+    jobTitle: string;
+    documentType: 'invoice' | 'estimate' | 'contract' | 'work_order';
+    documentName: string;
+    amount?: number;
+    status: string;
+    createdAt: Date;
+    signedAt?: Date;
+    documentUrl: string;
+  }>> {
+    const client = this.clients.get(clientId);
+    if (!client) return [];
+
+    const jobs = Array.from(this.jobs.values())
+      .filter(job => job.clientName === client.name);
+    
+    const jobIds = jobs.map(job => job.id);
+    const documents = Array.from(this.jobDocuments.values())
+      .filter(doc => jobIds.includes(doc.jobId) && 
+        ['invoice', 'estimate', 'contract', 'work_order'].includes(doc.documentType))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return documents.map(doc => {
+      const job = jobs.find(j => j.id === doc.jobId);
+      return {
+        id: doc.id,
+        jobId: doc.jobId,
+        jobTitle: job?.title || 'Unknown Job',
+        documentType: doc.documentType as 'invoice' | 'estimate' | 'contract' | 'work_order',
+        documentName: doc.documentName,
+        amount: job ? parseFloat(job.totalAmount) : undefined,
+        status: doc.status,
+        createdAt: doc.createdAt,
+        signedAt: doc.signedAt || undefined,
+        documentUrl: doc.documentUrl,
+      };
+    });
   }
 }
 
