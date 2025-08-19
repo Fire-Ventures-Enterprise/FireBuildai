@@ -75,7 +75,7 @@ export default function Landing() {
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
     // For demo purposes, redirect to dashboard
-    setLocation("/");
+    setLocation("/dashboard");
     setIsAuthOpen(false);
   };
 

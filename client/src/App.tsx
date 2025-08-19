@@ -85,7 +85,6 @@ function AppLayout() {
 
         <main className="h-full overflow-y-auto">
           <Switch>
-            <Route path="/" component={Dashboard} />
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/jobs" component={Jobs} />
             <Route path="/purchase-orders" component={PurchaseOrders} />
@@ -113,12 +112,27 @@ function AppLayout() {
 function AppContent() {
   return (
     <Switch>
-      {/* Landing and Demo Pages - No sidebar */}
+      {/* Landing page as default */}
+      <Route path="/" component={Landing} />
       <Route path="/landing" component={Landing} />
       <Route path="/demo" component={Demo} />
       
       {/* Main Application - With sidebar */}
-      <Route path="/*?" component={AppLayout} />
+      <Route path="/dashboard" component={AppLayout} />
+      <Route path="/jobs" component={AppLayout} />
+      <Route path="/purchase-orders" component={AppLayout} />
+      <Route path="/quotes" component={AppLayout} />
+      <Route path="/invoices" component={AppLayout} />
+      <Route path="/estimates" component={AppLayout} />
+      <Route path="/documents" component={AppLayout} />
+      <Route path="/tracking" component={AppLayout} />
+      <Route path="/contractors" component={AppLayout} />
+      <Route path="/expenses" component={AppLayout} />
+      <Route path="/analytics" component={AppLayout} />
+      <Route path="/clients" component={AppLayout} />
+      <Route path="/fleet" component={AppLayout} />
+      <Route path="/messages" component={AppLayout} />
+      <Route path="/settings" component={AppLayout} />
     </Switch>
   );
 }
