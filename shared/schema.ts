@@ -211,6 +211,19 @@ export const communications = pgTable("communications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const clientPhotos = pgTable("client_photos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").references(() => clients.id).notNull(),
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  objectPath: text("object_path").notNull(), // path to object storage
+  description: text("description"),
+  takenBy: text("taken_by"), // who took the photo
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
 export const insertCompanySchema = createInsertSchema(companies).omit({ id: true, createdAt: true, updatedAt: true });
@@ -226,6 +239,7 @@ export const insertJobDocumentSchema = createInsertSchema(jobDocuments).omit({ i
 export const insertCompanySettingsSchema = createInsertSchema(companySettings).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCommunicationSchema = createInsertSchema(communications).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertClientPhotoSchema = createInsertSchema(clientPhotos).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -256,3 +270,5 @@ export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
 export type Communication = typeof communications.$inferSelect;
 export type InsertCommunication = z.infer<typeof insertCommunicationSchema>;
+export type ClientPhoto = typeof clientPhotos.$inferSelect;
+export type InsertClientPhoto = z.infer<typeof insertClientPhotoSchema>;

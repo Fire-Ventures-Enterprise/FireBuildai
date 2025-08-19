@@ -22,7 +22,9 @@ import {
   type Client,
   type InsertClient,
   type Communication,
-  type InsertCommunication
+  type InsertCommunication,
+  type ClientPhoto,
+  type InsertClientPhoto
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -258,7 +260,11 @@ export interface IStorage {
   updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication>;
   deleteCommunication(id: string): Promise<void>;
   getRecentCommunications(): Promise<Communication[]>;
-  getRecentCommunications(): Promise<Communication[]>;
+
+  // Client Photos
+  getClientPhotos(clientId: string): Promise<ClientPhoto[]>;
+  createClientPhoto(photo: InsertClientPhoto): Promise<ClientPhoto>;
+  deleteClientPhoto(photoId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -274,6 +280,7 @@ export class MemStorage implements IStorage {
   private companySettings: Map<string, CompanySettings> = new Map();
   private clients: Map<string, Client> = new Map();
   private communications: Map<string, Communication> = new Map();
+  private clientPhotos: Map<string, ClientPhoto> = new Map();
 
   constructor() {
     this.initializeMockData();
@@ -2041,6 +2048,30 @@ export class MemStorage implements IStorage {
     return Array.from(this.communications.values())
       .sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime())
       .slice(0, 20); // Return latest 20 communications
+  }
+
+  // Client Photos Implementation
+  async getClientPhotos(clientId: string): Promise<ClientPhoto[]> {
+    const photos = Array.from(this.clientPhotos.values())
+      .filter(photo => photo.clientId === clientId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    return photos;
+  }
+
+  async createClientPhoto(photo: InsertClientPhoto): Promise<ClientPhoto> {
+    const newPhoto: ClientPhoto = {
+      id: randomUUID(),
+      ...photo,
+      createdAt: new Date(),
+    };
+    
+    this.clientPhotos.set(newPhoto.id, newPhoto);
+    return newPhoto;
+  }
+
+  async deleteClientPhoto(photoId: string): Promise<void> {
+    this.clientPhotos.delete(photoId);
   }
 }
 

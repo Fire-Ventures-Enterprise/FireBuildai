@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall, Send } from "lucide-react";
+import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall, Send, Camera } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -415,13 +415,17 @@ export default function Clients() {
                     </DialogHeader>
                     
                     <Tabs defaultValue="overview" className="w-full">
-                      <TabsList className="grid w-full grid-cols-4">
+                      <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
                         <TabsTrigger value="jobs" data-testid="tab-jobs">Jobs ({client.totalJobs})</TabsTrigger>
                         <TabsTrigger value="documents" data-testid="tab-documents">Documents</TabsTrigger>
                         <TabsTrigger value="communications" data-testid="tab-communications">
                           <MessageSquare className="h-4 w-4 mr-1" />
                           Communications
+                        </TabsTrigger>
+                        <TabsTrigger value="photos" data-testid="tab-photos">
+                          <Camera className="h-4 w-4 mr-1" />
+                          Photos
                         </TabsTrigger>
                       </TabsList>
                       
@@ -939,6 +943,10 @@ export default function Clients() {
                           </Card>
                         )}
                       </TabsContent>
+
+                      <TabsContent value="photos" className="space-y-4">
+                        <ClientPhotos client={selectedClient} />
+                      </TabsContent>
                     </Tabs>
                   </DialogContent>
                 </Dialog>
@@ -961,6 +969,264 @@ export default function Clients() {
             <Button data-testid="button-add-first-client" className="gap-2">
               <Plus className="h-4 w-4" />
               Add Your First Client
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+interface ClientPhoto {
+  id: string;
+  clientId: string;
+  imageUrl: string;
+  description?: string;
+  createdAt: Date;
+}
+
+function ClientPhotos({ client }: { client: Client | null }) {
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const photosQuery = useQuery({
+    queryKey: [`/api/clients/${client?.id}/photos`],
+    enabled: !!client?.id,
+  });
+
+  const deletePhotoMutation = useMutation({
+    mutationFn: async (photoId: string) => {
+      await apiRequest("DELETE", `/api/photos/${photoId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/clients/${client?.id}/photos`] });
+      toast({
+        title: "Photo deleted",
+        description: "The photo has been removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete photo. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const uploadPhoto = async (imageData: string) => {
+    if (!client?.id) return;
+
+    setIsUploading(true);
+    try {
+      // Get upload URL
+      const uploadResponse = await apiRequest("POST", "/api/photos/upload-url");
+      const { uploadURL } = await uploadResponse.json();
+
+      // Convert base64 to blob
+      const response = await fetch(imageData);
+      const blob = await response.blob();
+
+      // Upload to object storage
+      await fetch(uploadURL, {
+        method: "PUT",
+        body: blob,
+        headers: {
+          "Content-Type": "image/jpeg",
+        },
+      });
+
+      // Save photo record
+      const objectPath = new URL(uploadURL).pathname;
+      await apiRequest("POST", `/api/clients/${client.id}/photos`, {
+        imageUrl: objectPath,
+        description: "Photo captured from client portal",
+      });
+
+      queryClient.invalidateQueries({ queryKey: [`/api/clients/${client.id}/photos`] });
+      setCapturedImage(null);
+      setIsCameraOpen(false);
+      
+      toast({
+        title: "Photo saved",
+        description: "The photo has been added to the client's profile.",
+      });
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to save the photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const CameraCapture = () => {
+    const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
+    const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
+
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } // Use back camera on mobile
+        });
+        if (videoRef) {
+          videoRef.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        toast({
+          title: "Camera access denied",
+          description: "Please allow camera access to take photos.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const capturePhoto = () => {
+      if (videoRef && canvasRef) {
+        const context = canvasRef.getContext('2d');
+        if (context) {
+          canvasRef.width = videoRef.videoWidth;
+          canvasRef.height = videoRef.videoHeight;
+          context.drawImage(videoRef, 0, 0);
+          const imageData = canvasRef.toDataURL('image/jpeg');
+          setCapturedImage(imageData);
+          
+          // Stop camera stream
+          const stream = videoRef.srcObject as MediaStream;
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+          }
+        }
+      }
+    };
+
+    return (
+      <div className="space-y-4">
+        {!capturedImage ? (
+          <div className="relative">
+            <video
+              ref={setVideoRef}
+              autoPlay
+              playsInline
+              className="w-full rounded-lg"
+              onLoadedMetadata={startCamera}
+            />
+            <canvas ref={setCanvasRef} className="hidden" />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+              <Button
+                onClick={capturePhoto}
+                size="lg"
+                className="rounded-full h-16 w-16 bg-white text-black hover:bg-gray-100"
+              >
+                <Camera className="h-8 w-8" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setCapturedImage(null)}
+                variant="outline"
+                className="flex-1"
+              >
+                Retake
+              </Button>
+              <Button
+                onClick={() => uploadPhoto(capturedImage)}
+                disabled={isUploading}
+                className="flex-1"
+              >
+                {isUploading ? "Saving..." : "Save Photo"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (!client) return null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Client Photos</h3>
+        <Button
+          onClick={() => setIsCameraOpen(true)}
+          className="gap-2"
+          data-testid="button-take-photo"
+        >
+          <Camera className="h-4 w-4" />
+          Take Photo
+        </Button>
+      </div>
+
+      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Take Photo</DialogTitle>
+            <DialogDescription>
+              Capture a photo for {client?.name}'s profile
+            </DialogDescription>
+          </DialogHeader>
+          <CameraCapture />
+        </DialogContent>
+      </Dialog>
+
+      {photosQuery.isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      ) : photosQuery.data && photosQuery.data.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {photosQuery.data.map((photo: ClientPhoto) => (
+            <div key={photo.id} className="relative group">
+              <img
+                src={photo.imageUrl}
+                alt={photo.description || "Client photo"}
+                className="w-full aspect-square object-cover rounded-lg"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => deletePhotoMutation.mutate(photo.id)}
+                  disabled={deletePhotoMutation.isPending}
+                >
+                  Delete
+                </Button>
+              </div>
+              {photo.description && (
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                  {photo.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 mb-4">No photos yet</p>
+            <Button
+              onClick={() => setIsCameraOpen(true)}
+              className="gap-2"
+            >
+              <Camera className="h-4 w-4" />
+              Take First Photo
             </Button>
           </CardContent>
         </Card>

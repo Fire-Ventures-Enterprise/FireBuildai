@@ -431,6 +431,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client photos endpoints
+  app.get("/api/clients/:id/photos", async (req, res) => {
+    try {
+      const photos = await storage.getClientPhotos(req.params.id);
+      res.json(photos);
+    } catch (error) {
+      console.error("Error fetching client photos:", error);
+      res.status(500).json({ message: "Failed to fetch client photos" });
+    }
+  });
+
+  app.post("/api/clients/:id/photos", async (req, res) => {
+    try {
+      const photoData = {
+        ...req.body,
+        clientId: req.params.id,
+      };
+      const photo = await storage.createClientPhoto(photoData);
+      res.status(201).json(photo);
+    } catch (error) {
+      console.error("Error creating client photo:", error);
+      res.status(500).json({ message: "Failed to create client photo" });
+    }
+  });
+
+  app.delete("/api/photos/:id", async (req, res) => {
+    try {
+      await storage.deleteClientPhoto(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting photo:", error);
+      res.status(500).json({ message: "Failed to delete photo" });
+    }
+  });
+
+  // Photo upload URL endpoint
+  app.post("/api/photos/upload-url", async (req, res) => {
+    try {
+      const { ObjectStorageService } = await import("./objectStorage");
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getClientPhotoUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ message: "Failed to generate upload URL" });
+    }
+  });
+
+  // Serve uploaded photos
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const { ObjectStorageService } = await import("./objectStorage");
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving photo:", error);
+      if (error.name === "ObjectNotFoundError") {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates
