@@ -21,7 +21,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="firebuild-ui-theme">
+      <ThemeProvider defaultTheme="dark" storageKey="firebuild-ui-theme">
         <TooltipProvider>
           <Toaster />
           <Router />
