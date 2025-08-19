@@ -21,6 +21,7 @@ import Fleet from "@/pages/Fleet";
 import Messages from "@/pages/Messages";
 import Jobs from "@/pages/Jobs";
 import PurchaseOrders from "@/pages/PurchaseOrders";
+import CreatePurchaseOrder from "@/pages/CreatePurchaseOrder";
 import Quotes from "@/pages/Quotes";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
@@ -85,6 +86,7 @@ function AppContent() {
             <Route path="/" component={Dashboard} />
             <Route path="/jobs" component={Jobs} />
             <Route path="/purchase-orders" component={PurchaseOrders} />
+            <Route path="/purchase-orders/create" component={CreatePurchaseOrder} />
             <Route path="/quotes" component={Quotes} />
             <Route path="/invoices" component={Invoices} />
             <Route path="/estimates" component={Estimates} />

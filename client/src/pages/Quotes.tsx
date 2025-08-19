@@ -362,7 +362,7 @@ export default function Quotes() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">No job selected</SelectItem>
+                              <SelectItem value="none">No job selected</SelectItem>
                               {jobs.map((job: any) => (
                                 <SelectItem key={job.id} value={job.id}>
                                   {job.title}

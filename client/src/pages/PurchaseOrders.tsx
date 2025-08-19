@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -92,6 +93,7 @@ const statusColors = {
 };
 
 export default function PurchaseOrders() {
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -240,14 +242,28 @@ export default function PurchaseOrders() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Purchase Orders</h1>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-po" className="gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Create Purchase Order
-            </Button>
-          </DialogTrigger>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Purchase Orders</h1>
+          <p className="text-muted-foreground">
+            Manage and create purchase orders for contractors and trades people
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setLocation("/purchase-orders/create")}
+            data-testid="button-create-po-page"
+            className="gap-2"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Create Purchase Order
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-create-po-dialog" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Quick Create
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Purchase Order</DialogTitle>
@@ -330,7 +346,7 @@ export default function PurchaseOrders() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No job selected</SelectItem>
+                            <SelectItem value="none">No job selected</SelectItem>
                             {jobs.map((job: any) => (
                               <SelectItem key={job.id} value={job.id}>
                                 {job.title}
@@ -355,7 +371,7 @@ export default function PurchaseOrders() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No quote selected</SelectItem>
+                            <SelectItem value="none">No quote selected</SelectItem>
                             {quotes.map((quote: any) => (
                               <SelectItem key={quote.id} value={quote.id}>
                                 {quote.quoteNumber} - {quote.title}
@@ -556,6 +572,7 @@ export default function PurchaseOrders() {
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Search and Filter Controls */}
