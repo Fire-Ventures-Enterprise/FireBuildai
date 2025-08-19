@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -9,6 +9,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Navigation from "@/components/Navigation";
 import { Menu, X } from "lucide-react";
 import Dashboard from "@/pages/Dashboard";
+import Landing from "@/pages/Landing";
+import Demo from "@/pages/Demo";
 import Invoices from "@/pages/Invoices";
 import Estimates from "@/pages/Estimates";
 import Documents from "@/pages/Documents";
@@ -26,7 +28,7 @@ import Quotes from "@/pages/Quotes";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
-function AppContent() {
+function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -84,6 +86,7 @@ function AppContent() {
         <main className="h-full overflow-y-auto">
           <Switch>
             <Route path="/" component={Dashboard} />
+            <Route path="/dashboard" component={Dashboard} />
             <Route path="/jobs" component={Jobs} />
             <Route path="/purchase-orders" component={PurchaseOrders} />
             <Route path="/purchase-orders/create" component={CreatePurchaseOrder} />
@@ -104,6 +107,19 @@ function AppContent() {
         </main>
       </div>
     </div>
+  );
+}
+
+function AppContent() {
+  return (
+    <Switch>
+      {/* Landing and Demo Pages - No sidebar */}
+      <Route path="/landing" component={Landing} />
+      <Route path="/demo" component={Demo} />
+      
+      {/* Main Application - With sidebar */}
+      <Route path="/*?" component={AppLayout} />
+    </Switch>
   );
 }
 
