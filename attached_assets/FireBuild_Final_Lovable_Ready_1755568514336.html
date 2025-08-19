@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireBuild - Complete Contractor Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-bg: #1a1c2e;
+            --secondary-bg: #1c2444;
+            --accent-blue: #1a73e8;
+            --success-green: #00c853;
+            --warning-amber: #ff9800;
+            --text-white: #ffffff;
+            --text-gray: #333a5f;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            color: var(--text-white);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .fire-card {
+            background: rgba(26, 28, 46, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(26, 115, 232, 0.2);
+            border-radius: 12px;
+        }
+        
+        .fire-btn-primary {
+            background: var(--accent-blue);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .fire-btn-primary:hover {
+            background: #1557c0;
+            transform: translateY(-1px);
+        }
+        
+        .fire-btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+        
+        .fire-btn-warning {
+            background: var(--warning-amber);
+            color: white;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, rgba(26, 115, 232, 0.1) 0%, rgba(0, 200, 83, 0.1) 100%);
+            border-left: 4px solid var(--accent-blue);
+        }
+        
+        .status-online {
+            background: var(--success-green);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-warning {
+            background: var(--warning-amber);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .fire-logo {
+            background: linear-gradient(45deg, #ff6b35, #ff9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .map-container {
+            background: #2a2d3a;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .contractor-pin {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--success-green);
+            border-radius: 50%;
+            border: 2px solid white;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="p-6 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-fire text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold fire-logo">FireBuild</h1>
+                    <p class="text-sm text-gray-400">Contractor Management Platform</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm font-medium">ABC Contracting</p>
+                    <p class="text-xs text-gray-400">Pro Plan • 5 Active Jobs</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-6 space-y-8">
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="fire-card p-6 metric-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-400">Active Jobs</p>
+                        <p class="text-3xl font-bold">12</p>
+                        <p class="text-sm text-green-400">↑ 3 new this week</p>
+                    </div>
+                    <i class="fas fa-briefcase text-3xl text-blue-400"></i>
+                </div>
+            </div>
+            
+            <div class="fire-card p-6 metric-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-400">Revenue (MTD)</p>
+                        <p class="text-3xl font-bold">$47,250</p>
+                        <p class="text-sm text-green-400">↑ 18% vs last month</p>
+                    </div>
+                    <i class="fas fa-dollar-sign text-3xl text-green-400"></i>
+                </div>
+            </div>
+            
+            <div class="fire-card p-6 metric-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-400">Contractors On Route</p>
+                        <p class="text-3xl font-bold">8</p>
+                        <p class="text-sm text-blue-400">Live GPS tracking</p>
+                    </div>
+                    <i class="fas fa-map-marker-alt text-3xl text-blue-400"></i>
+                </div>
+            </div>
+            
+            <div class="fire-card p-6 metric-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-400">Review Score</p>
+                        <p class="text-3xl font-bold">4.9</p>
+                        <p class="text-sm text-yellow-400">★★★★★ 127 reviews</p>
+                    </div>
+                    <i class="fas fa-star text-3xl text-yellow-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-Time Tracking & Payment System -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Live GPS Tracking -->
+            <div class="fire-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold">Live Contractor Tracking</h3>
+                    <span class="status-online w-3 h-3 rounded-full"></span>
+                </div>
+                
+                <div class="map-container h-64 mb-4 relative">
+                    <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-map text-6xl opacity-30"></i>
+                    </div>
+                    <!-- Contractor pins -->
+                    <div class="contractor-pin" style="top: 30%; left: 40%;"></div>
+                    <div class="contractor-pin" style="top: 60%; left: 70%;"></div>
+                    <div class="contractor-pin" style="top: 45%; left: 25%;"></div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="status-online w-2 h-2 rounded-full"></div>
+                            <div>
+                                <p class="font-medium">Mike Johnson</p>
+                                <p class="text-sm text-gray-400">Plumbing Repair → 123 Oak St</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-green-400">ETA: 8 min</p>
+                            <p class="text-xs text-gray-400">0.8 miles away</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="status-online w-2 h-2 rounded-full"></div>
+                            <div>
+                                <p class="font-medium">Sarah Davis</p>
+                                <p class="text-sm text-gray-400">Electrical Install → 456 Pine Ave</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-green-400">ETA: 15 min</p>
+                            <p class="text-xs text-gray-400">2.1 miles away</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment & Review Automation -->
+            <div class="fire-card p-6">
+                <h3 class="text-xl font-semibold mb-4">Payment & Review System</h3>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-green-400 font-medium">Payment Received!</span>
+                            <i class="fas fa-check-circle text-green-400"></i>
+                        </div>
+                        <p class="text-sm text-gray-300">Invoice #INV-2024-0847 - $2,450.00</p>
+                        <p class="text-xs text-gray-400">Kitchen Renovation - The Johnsons</p>
+                        <div class="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
+                            <p class="text-sm text-blue-300">
+                                <i class="fas fa-robot mr-2"></i>
+                                Auto Review Request Sent!
+                            </p>
+                            <p class="text-xs text-gray-400 mt-1">
+                                SMS sent to client with Google & Facebook review links
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-800 rounded-lg">
+                        <h4 class="font-medium mb-3">Recent Reviews Generated</h4>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm">★★★★★ Google Review</p>
+                                    <p class="text-xs text-gray-400">The Smiths - Bathroom Remodel</p>
+                                </div>
+                                <span class="text-xs text-green-400">2 hrs ago</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm">★★★★★ Facebook Review</p>
+                                    <p class="text-xs text-gray-400">Mike & Lisa - Deck Installation</p>
+                                </div>
+                                <span class="text-xs text-green-400">5 hrs ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense OCR & Job Management -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Smart Expense Capture -->
+            <div class="fire-card p-6">
+                <h3 class="text-xl font-semibold mb-4">Smart Expense Capture (OCR)</h3>
+                
+                <div class="space-y-4">
+                    <div class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+                        <i class="fas fa-camera text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-300 mb-2">Snap a photo of your receipt</p>
+                        <p class="text-sm text-gray-400">AI will extract all data automatically</p>
+                        <button class="mt-4 fire-btn-primary px-6 py-2 rounded-lg">
+                            <i class="fas fa-camera mr-2"></i>Capture Receipt
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <h4 class="font-medium">Recent Expenses Processed</h4>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-green-400 text-sm">✓ Processed by AI</span>
+                                <span class="text-xs text-gray-400">Job: Kitchen Reno #847</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-400">Vendor</p>
+                                    <p>Home Depot</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Amount</p>
+                                    <p class="font-medium">$247.83</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Category</p>
+                                    <p>Materials</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Date</p>
+                                    <p>Dec 15, 2024</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-800 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-green-400 text-sm">✓ Auto-categorized</span>
+                                <span class="text-xs text-gray-400">Job: Deck Build #852</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-400">Vendor</p>
+                                    <p>Lumber Yard Inc</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Amount</p>
+                                    <p class="font-medium">$1,456.20</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Category</p>
+                                    <p>Materials - Wood</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Tax Deductible</p>
+                                    <p class="text-green-400">Yes</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Jobs Dashboard -->
+            <div class="fire-card p-6">
+                <h3 class="text-xl font-semibold mb-4">Active Jobs Management</h3>
+                
+                <div class="space-y-4">
+                    <div class="p-4 border-l-4 border-green-400 bg-green-900/10">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium">Kitchen Renovation</h4>
+                            <span class="text-xs bg-green-600 px-2 py-1 rounded-full">In Progress</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">The Johnson Family • 123 Oak Street</p>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-400">Contractor</p>
+                                <p>Mike Johnson <span class="status-online w-2 h-2 rounded-full inline-block ml-2"></span></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Progress</p>
+                                <p>85% Complete</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Next Payment</p>
+                                <p class="font-medium">$2,450 (Final)</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">ETA Completion</p>
+                                <p>Dec 20, 2024</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 border-l-4 border-blue-400 bg-blue-900/10">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium">Bathroom Remodel</h4>
+                            <span class="text-xs bg-blue-600 px-2 py-1 rounded-full">Scheduled</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">The Smiths • 456 Pine Avenue</p>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-400">Contractor</p>
+                                <p>Sarah Davis</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Start Date</p>
+                                <p>Dec 22, 2024</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Estimate Sent</p>
+                                <p class="text-green-400">✓ Approved</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Total Value</p>
+                                <p class="font-medium">$8,750</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SMS Communication & Accountant Integration -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- SMS Communication Center -->
+            <div class="fire-card p-6">
+                <h3 class="text-xl font-semibold mb-4">SMS Communication Hub</h3>
+                
+                <div class="space-y-4">
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h4 class="font-medium mb-3">Recent Messages</h4>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-start space-x-3">
+                                <div class="status-online w-2 h-2 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <div class="bg-blue-600/20 p-3 rounded-lg">
+                                        <p class="text-sm">Hi Sarah! Your contractor Mike from ABC Contracting is on the way to 123 Main St. ETA: 15 minutes. Track live: bit.ly/track-mike</p>
+                                        <p class="text-xs text-gray-400 mt-1">To: (555) 123-4567 • Delivered ✓</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3">
+                                <div class="status-online w-2 h-2 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <div class="bg-green-600/20 p-3 rounded-lg">
+                                        <p class="text-sm">Hi! Your kitchen renovation is complete! We'd love a review: Google: bit.ly/review-g | Facebook: bit.ly/review-f Thank you! - ABC Contracting</p>
+                                        <p class="text-xs text-gray-400 mt-1">To: (555) 987-6543 • Read ✓ • Review Clicked ✓</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3">
+                                <div class="bg-yellow-600 w-2 h-2 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <div class="bg-gray-700 p-3 rounded-lg">
+                                        <p class="text-sm">Reminder: Final payment of $2,450 is due tomorrow for kitchen project. Pay online: pay.firebuild.com/inv847</p>
+                                        <p class="text-xs text-gray-400 mt-1">To: (555) 555-5555 • Scheduled for 9:00 AM</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="text-center p-3 bg-gray-800 rounded-lg">
+                            <p class="text-2xl font-bold text-green-400">98.5%</p>
+                            <p class="text-xs text-gray-400">Delivery Rate</p>
+                        </div>
+                        <div class="text-center p-3 bg-gray-800 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-400">89%</p>
+                            <p class="text-xs text-gray-400">Read Rate</p>
+                        </div>
+                        <div class="text-center p-3 bg-gray-800 rounded-lg">
+                            <p class="text-2xl font-bold text-yellow-400">47%</p>
+                            <p class="text-xs text-gray-400">Review Click Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Accountant Integration -->
+            <div class="fire-card p-6">
+                <h3 class="text-xl font-semibold mb-4">Accountant Integration Hub</h3>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-medium text-blue-300">Tax Season Ready</h4>
+                            <i class="fas fa-calculator text-blue-400"></i>
+                        </div>
+                        <p class="text-sm text-gray-300 mb-3">All expenses automatically categorized for tax deductions</p>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-400">Materials</p>
+                                <p class="font-medium">$47,250.83</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Equipment</p>
+                                <p class="font-medium">$12,450.20</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Travel/Gas</p>
+                                <p class="font-medium">$3,847.15</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Total Deductions</p>
+                                <p class="font-medium text-green-400">$63,548.18</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <h4 class="font-medium">Export Options</h4>
+                        
+                        <button class="w-full fire-btn-primary p-3 rounded-lg flex items-center justify-center space-x-2">
+                            <i class="fas fa-download"></i>
+                            <span>Push to Accountant (QuickBooks)</span>
+                        </button>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="fire-btn-success p-3 rounded-lg text-sm">
+                                <i class="fas fa-file-excel mr-2"></i>Export Excel
+                            </button>
+                            <button class="fire-btn-warning p-3 rounded-lg text-sm">
+                                <i class="fas fa-file-pdf mr-2"></i>Tax Summary PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 bg-gray-800 rounded-lg">
+                        <h4 class="font-medium mb-2">Connected Accountant</h4>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Jennifer Martinez, CPA</p>
+                                <p class="text-sm text-gray-400">Martinez Tax Services</p>
+                                <p class="text-xs text-green-400">✓ Auto-sync enabled</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Analytics -->
+        <div class="fire-card p-6">
+            <h3 class="text-xl font-semibold mb-4">Revenue & Performance Analytics</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2">
+                    <div style="height: 300px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+                        <h4 class="font-medium text-green-300 mb-2">This Month</h4>
+                        <p class="text-3xl font-bold">$47,250</p>
+                        <p class="text-sm text-green-400">↑ 18% from last month</p>
+                    </div>
+                    
+                    <div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                        <h4 class="font-medium text-blue-300 mb-2">Jobs Completed</h4>
+                        <p class="text-3xl font-bold">24</p>
+                        <p class="text-sm text-blue-400">Average: $1,969 per job</p>
+                    </div>
+                    
+                    <div class="p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                        <h4 class="font-medium text-yellow-300 mb-2">Review Score Impact</h4>
+                        <p class="text-3xl font-bold">4.9★</p>
+                        <p class="text-sm text-yellow-400">+32% lead conversion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lovable Development Notes -->
+        <div class="fire-card p-6">
+            <h3 class="text-xl font-semibold mb-4">
+                <i class="fas fa-code mr-2 text-purple-400"></i>
+                FireBuild Development Specifications for Lovable
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+                    <h4 class="font-medium text-purple-300 mb-3">Core Features</h4>
+                    <ul class="text-sm space-y-1 text-gray-300">
+                        <li>✓ GPS Tracking & ETA Calculations</li>
+                        <li>✓ Automated SMS Notifications</li>
+                        <li>✓ Payment-Triggered Review Requests</li>
+                        <li>✓ OCR Expense Capture</li>
+                        <li>✓ Invoice Management</li>
+                        <li>✓ Job Scheduling & Tracking</li>
+                        <li>✓ Client Communication Hub</li>
+                        <li>✓ Accountant Integration</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                    <h4 class="font-medium text-blue-300 mb-3">Technical Stack</h4>
+                    <ul class="text-sm space-y-1 text-gray-300">
+                        <li>• React/Next.js Frontend</li>
+                        <li>• Node.js/Express Backend</li>
+                        <li>• PostgreSQL Database</li>
+                        <li>• Twilio SMS API</li>
+                        <li>• Google Maps API</li>
+                        <li>• Stripe Payment Processing</li>
+                        <li>• AWS S3 File Storage</li>
+                        <li>• Socket.io Real-time Updates</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+                    <h4 class="font-medium text-green-300 mb-3">Key Integrations</h4>
+                    <ul class="text-sm space-y-1 text-gray-300">
+                        <li>• Google My Business API</li>
+                        <li>• Facebook Business API</li>
+                        <li>• QuickBooks Online API</li>
+                        <li>• OCR.space or AWS Textract</li>
+                        <li>• Google Maps Geolocation</li>
+                        <li>• Twilio Messaging</li>
+                        <li>• Stripe Connect</li>
+                        <li>• Firebase Push Notifications</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-gray-800 rounded-lg">
+                <h4 class="font-medium mb-3">Deployment Architecture</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-400 mb-2">Frontend Deployment:</p>
+                        <p class="text-gray-300">Vercel with custom domain (firebuild.app)</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 mb-2">Backend Infrastructure:</p>
+                        <p class="text-gray-300">AWS ECS with load balancer + RDS PostgreSQL</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 mb-2">Mobile Apps:</p>
+                        <p class="text-gray-300">React Native (iOS/Android) with app store deployment</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 mb-2">Real-time Features:</p>
+                        <p class="text-gray-300">WebSocket connections for GPS tracking & notifications</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Revenue Chart
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [25000, 28000, 32000, 35000, 38000, 42000, 39000, 45000, 44000, 47000, 47250, 50000],
+                    borderColor: '#1a73e8',
+                    backgroundColor: 'rgba(26, 115, 232, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            color: '#ffffff',
+                            callback: function(value) {
+                                return '$' + (value / 1000) + 'K';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ffffff'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update ETA times
+            const etaElements = document.querySelectorAll('.text-green-400');
+            etaElements.forEach(el => {
+                if (el.textContent.includes('ETA:')) {
+                    const currentMinutes = parseInt(el.textContent.match(/\d+/)[0]);
+                    if (currentMinutes > 0) {
+                        el.textContent = `ETA: ${currentMinutes - 1} min`;
+                    }
+                }
+            });
+        }, 60000); // Update every minute
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9715fd2cde1baa9e","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.8.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDr2N7Pt4tCgOl9f2H28Xq9CPf917%2FItXn69c2bRgKUAksD2CafhIiAoitNILujxRcYeKcpSqkQJEvMbTv1IIx5V6adehWraem3q5epOYXEvLUvNeaNV1JHKhWThqjMB77r1UOiM%2FGt%2Bw8%2FuSqp61Uqg%2BuXO3aru1llCeox2ScACzb3HXjewVqaib27P6HUjIgUpSR6xt%2F3Y8rr7i8UHLcMNNq%2BsDWDF6t7nMN%2B6U5w4FT77wcVxdhME8qniA4hfqA9SxscISHuXbSfar68zOdR3ikBwrg0QJha6TNvrBucygI3CJR8%2B8Hwo2oDrwpiqaZFVVqADaLK9rNUSNt0BwMaNp5e7s9Pkg%2BIiGDGaKRDGDGVaAAXiM7i8b9gbCDiFiWPxD1nwZwfcqQ4W5k33VeiD1EjGIdRwLPm4iLn8DYFCo%2Ba66UgKcdwxScOuBRsORfeD51mgxqUcBZpQjaxMxgNvyBv1XcQyvA7KuDv2XqcIDAcnn8Ozl7Nr1KOugZrJ%2B1uUm1H3DkiaXiLOIbzShdus%3D";
+        window.__genspark_locale = "en-US";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDr2N7Pt4tCgOl9f2H28Xq9CPf917/ItXn69c2bRgKUAksD2CafhIiAoitNILujxRcYeKcpSqkQJEvMbTv1IIx5V6adehWraem3q5epOYXEvLUvNeaNV1JHKhWThqjMB77r1UOiM/Gt+w8/uSqp61Uqg+uXO3aru1llCeox2ScACzb3HXjewVqaib27P6HUjIgUpSR6xt/3Y8rr7i8UHLcMNNq+sDWDF6t7nMN+6U5w4FT77wcVxdhME8qniA4hfqA9SxscISHuXbSfar68zOdR3ikBwrg0QJha6TNvrBucygI3CJR8+8Hwo2oDrwpiqaZFVVqADaLK9rNUSNt0BwMaNp5e7s9Pkg+IiGDGaKRDGDGVaAAXiM7i8b9gbCDiFiWPxD1nwZwfcqQ4W5k33VeiD1EjGIdRwLPm4iLn8DYFCo+a66UgKcdwxScOuBRsORfeD51mgxqUcBZpQjaxMxgNvyBv1XcQyvA7KuDv2XqcIDAcnn8Ozl7Nr1KOugZrJ+1uUm1H3DkiaXiLOIbzShdus=";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
