@@ -1,4 +1,4 @@
-import { Settings, User, Bell, Lock, Palette } from "lucide-react";
+import { Settings, User, Bell, Lock, Building2, CreditCard, FileText, Globe, Calculator, DollarSign, Users, Headphones, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CompanySettingsForm } from "@/components/CompanySettingsForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

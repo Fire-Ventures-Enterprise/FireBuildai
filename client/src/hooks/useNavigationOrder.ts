@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LucideIcon, LayoutDashboard, FileText, MapPin, Users, Receipt, BarChart3, MessageCircle, Truck, Settings } from "lucide-react";
+import { LucideIcon, LayoutDashboard, FileText, MapPin, Users, Receipt, BarChart3, MessageCircle, Truck, Settings, DollarSign, Calculator } from "lucide-react";
 
 export interface NavigationItem {
   id: string;
@@ -10,6 +10,8 @@ export interface NavigationItem {
 
 const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: "dashboard", name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { id: "invoices", name: "Invoices", href: "/invoices", icon: DollarSign },
+  { id: "estimates", name: "Estimates", href: "/estimates", icon: Calculator },
   { id: "documents", name: "Documents", href: "/documents", icon: FileText },
   { id: "tracking", name: "GPS Tracking", href: "/tracking", icon: MapPin },
   { id: "contractors", name: "Contractors", href: "/contractors", icon: Users },

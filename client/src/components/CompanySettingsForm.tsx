@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Building2, Save, Palette } from "lucide-react";
+import { Upload, Building, ChevronRight } from "lucide-react";
 import type { CompanySettings } from "@shared/schema";
 
 interface CompanySettingsFormProps {
@@ -19,7 +20,26 @@ export function CompanySettingsForm({ companyId }: CompanySettingsFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [formData, setFormData] = useState<Partial<CompanySettings>>({});
+  const [formData, setFormData] = useState({
+    firstName: "Nasser",
+    lastName: "Oweis",
+    email: "noweis2020@gmail.com",
+    currency: "Canadian Dollar (CAD)",
+    locale: "Canada (English)",
+    companyName: "FireBuild Construction",
+    companyAddress: "123 Main Street",
+    companyCity: "Toronto",
+    companyState: "ON",
+    companyZipCode: "M5V 3A8",
+    companyPhone: "(416) 555-0123",
+    companyEmail: "info@firebuild.com",
+    companyWebsite: "www.firebuild.com",
+    taxNumber: "123456789",
+    logoUrl: "",
+  });
+
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>("");
 
   const { data: settings, isLoading } = useQuery({
     queryKey: [`/api/company-settings/${companyId}`],
@@ -27,7 +47,7 @@ export function CompanySettingsForm({ companyId }: CompanySettingsFormProps) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (updates: Partial<CompanySettings>) => {
+    mutationFn: async (updates: any) => {
       const response = await apiRequest("PUT", `/api/company-settings/${companyId}`, updates);
       return response.json();
     },
@@ -35,7 +55,7 @@ export function CompanySettingsForm({ companyId }: CompanySettingsFormProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/company-settings/${companyId}`] });
       toast({
         title: "Settings Updated",
-        description: "Company branding settings have been saved successfully.",
+        description: "Company settings have been saved successfully.",
       });
     },
     onError: (error) => {
@@ -49,7 +69,7 @@ export function CompanySettingsForm({ companyId }: CompanySettingsFormProps) {
 
   useEffect(() => {
     if (settings) {
-      setFormData(settings);
+      setFormData(prev => ({ ...prev, ...settings }));
     }
   }, [settings]);
 
@@ -58,276 +78,323 @@ export function CompanySettingsForm({ companyId }: CompanySettingsFormProps) {
     updateMutation.mutate(formData);
   };
 
-  const handleInputChange = (field: keyof CompanySettings, value: string) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setLogoPreview(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdatePassword = () => {
+    toast({
+      title: "Password Update",
+      description: "Password update functionality coming soon...",
+    });
+  };
+
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Company Branding Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-muted rounded w-3/4"></div>
-            <div className="h-4 bg-muted rounded w-1/2"></div>
-            <div className="h-4 bg-muted rounded w-5/6"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          Company Branding Settings
-        </CardTitle>
-        <CardDescription>
-          Customize your company information that appears on all documents
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Company Identity */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">Company Identity</h3>
-              <Badge variant="outline">Appears on all documents</Badge>
+    <div className="space-y-6">
+      {/* Account Information Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Account Information</CardTitle>
+              <CardDescription>Manage your personal account information</CardDescription>
             </div>
-            
+            <div className="flex gap-2">
+              <Button variant="outline" data-testid="button-cancel-settings">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={updateMutation.isPending}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                data-testid="button-save-settings"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Personal Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name *</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
-                  id="companyName"
-                  value={formData.companyName || ""}
-                  onChange={(e) => handleInputChange("companyName", e.target.value)}
-                  placeholder="ABC Contracting Inc."
-                  required
-                  data-testid="input-company-name"
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  placeholder="Enter first name"
+                  data-testid="input-first-name"
                 />
               </div>
-              
               <div className="space-y-2">
-                <Label htmlFor="logoUrl">Logo URL</Label>
+                <Label htmlFor="lastName">Last Name</Label>
                 <Input
-                  id="logoUrl"
-                  type="url"
-                  value={formData.logoUrl || ""}
-                  onChange={(e) => handleInputChange("logoUrl", e.target.value)}
-                  placeholder="https://your-site.com/logo.png"
-                  data-testid="input-logo-url"
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  placeholder="Enter last name"
+                  data-testid="input-last-name"
                 />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                placeholder="Enter email address"
+                data-testid="input-email"
+              />
+            </div>
+
+            {/* Update Password Button */}
+            <div className="space-y-2">
+              <Label>Update Password</Label>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-between"
+                onClick={handleUpdatePassword}
+                data-testid="button-update-password"
+              >
+                <span>Change your password</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Localization Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="currency">Currency</Label>
+                <Select value={formData.currency} onValueChange={(value) => handleInputChange("currency", value)}>
+                  <SelectTrigger data-testid="select-currency">
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-500 font-bold">🇨🇦</span>
+                      <SelectValue placeholder="Select currency" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Canadian Dollar (CAD)">🇨🇦 Canadian Dollar (CAD)</SelectItem>
+                    <SelectItem value="US Dollar (USD)">🇺🇸 US Dollar (USD)</SelectItem>
+                    <SelectItem value="British Pound (GBP)">🇬🇧 British Pound (GBP)</SelectItem>
+                    <SelectItem value="Euro (EUR)">🇪🇺 Euro (EUR)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="locale">Locale</Label>
+                <Select value={formData.locale} onValueChange={(value) => handleInputChange("locale", value)}>
+                  <SelectTrigger data-testid="select-locale">
+                    <SelectValue placeholder="Select locale" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Canada (English)">Canada (English)</SelectItem>
+                    <SelectItem value="United States (English)">United States (English)</SelectItem>
+                    <SelectItem value="United Kingdom (English)">United Kingdom (English)</SelectItem>
+                    <SelectItem value="Canada (French)">Canada (French)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="text-sm text-muted-foreground">
+              Locale changes date, number format and language on documents
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Company Details Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building className="h-5 w-5" />
+            Company Details
+          </CardTitle>
+          <CardDescription>Manage your company information and branding</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Logo Upload */}
+          <div className="space-y-4">
+            <Label>Company Logo</Label>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16 rounded-lg">
+                <AvatarImage src={logoPreview || formData.logoUrl} alt="Company Logo" />
+                <AvatarFallback className="rounded-lg bg-primary/10">
+                  <Building className="h-8 w-8 text-primary" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                  id="logo-upload"
+                />
+                <Label
+                  htmlFor="logo-upload"
+                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  data-testid="button-upload-logo"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload Logo
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Recommended: 200x200px, PNG or JPG format
+                </p>
               </div>
             </div>
           </div>
 
           <Separator />
 
-          {/* Contact Information */}
+          {/* Company Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact Information</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input
+                id="companyName"
+                value={formData.companyName}
+                onChange={(e) => handleInputChange("companyName", e.target.value)}
+                placeholder="Enter company name"
+                data-testid="input-company-name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="companyAddress">Address</Label>
+              <Input
+                id="companyAddress"
+                value={formData.companyAddress}
+                onChange={(e) => handleInputChange("companyAddress", e.target.value)}
+                placeholder="Enter company address"
+                data-testid="input-company-address"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="companyCity">City</Label>
                 <Input
-                  id="phone"
-                  value={formData.phone || ""}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="(555) 123-4567"
-                  data-testid="input-phone"
+                  id="companyCity"
+                  value={formData.companyCity}
+                  onChange={(e) => handleInputChange("companyCity", e.target.value)}
+                  placeholder="City"
+                  data-testid="input-company-city"
                 />
               </div>
-              
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="companyState">State/Province</Label>
                 <Input
-                  id="email"
+                  id="companyState"
+                  value={formData.companyState}
+                  onChange={(e) => handleInputChange("companyState", e.target.value)}
+                  placeholder="State/Province"
+                  data-testid="input-company-state"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyZipCode">Postal Code</Label>
+                <Input
+                  id="companyZipCode"
+                  value={formData.companyZipCode}
+                  onChange={(e) => handleInputChange("companyZipCode", e.target.value)}
+                  placeholder="Postal Code"
+                  data-testid="input-company-zip"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="companyPhone">Phone Number</Label>
+                <Input
+                  id="companyPhone"
+                  value={formData.companyPhone}
+                  onChange={(e) => handleInputChange("companyPhone", e.target.value)}
+                  placeholder="(416) 555-0123"
+                  data-testid="input-company-phone"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyEmail">Company Email</Label>
+                <Input
+                  id="companyEmail"
                   type="email"
-                  value={formData.email || ""}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="contact@company.com"
-                  data-testid="input-email"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
-                <Input
-                  id="website"
-                  type="url"
-                  value={formData.website || ""}
-                  onChange={(e) => handleInputChange("website", e.target.value)}
-                  placeholder="www.company.com"
-                  data-testid="input-website"
+                  value={formData.companyEmail}
+                  onChange={(e) => handleInputChange("companyEmail", e.target.value)}
+                  placeholder="info@company.com"
+                  data-testid="input-company-email"
                 />
               </div>
             </div>
-          </div>
 
-          <Separator />
-
-          {/* Business Address */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Business Address</h3>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">Street Address</Label>
-                <Input
-                  id="address"
-                  value={formData.address || ""}
-                  onChange={(e) => handleInputChange("address", e.target.value)}
-                  placeholder="123 Main Street"
-                  data-testid="input-address"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.city || ""}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                    placeholder="San Francisco"
-                    data-testid="input-city"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    value={formData.state || ""}
-                    onChange={(e) => handleInputChange("state", e.target.value)}
-                    placeholder="CA"
-                    data-testid="input-state"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="zipCode">ZIP Code</Label>
-                  <Input
-                    id="zipCode"
-                    value={formData.zipCode || ""}
-                    onChange={(e) => handleInputChange("zipCode", e.target.value)}
-                    placeholder="94105"
-                    data-testid="input-zip"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Legal Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Legal Information</h3>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="taxNumber">Tax ID Number</Label>
+                <Label htmlFor="companyWebsite">Website</Label>
+                <Input
+                  id="companyWebsite"
+                  value={formData.companyWebsite}
+                  onChange={(e) => handleInputChange("companyWebsite", e.target.value)}
+                  placeholder="www.company.com"
+                  data-testid="input-company-website"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="taxNumber">Tax Number</Label>
                 <Input
                   id="taxNumber"
-                  value={formData.taxNumber || ""}
+                  value={formData.taxNumber}
                   onChange={(e) => handleInputChange("taxNumber", e.target.value)}
-                  placeholder="12-3456789"
+                  placeholder="123456789"
                   data-testid="input-tax-number"
                 />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="licenseNumber">License Number</Label>
-                <Input
-                  id="licenseNumber"
-                  value={formData.licenseNumber || ""}
-                  onChange={(e) => handleInputChange("licenseNumber", e.target.value)}
-                  placeholder="LIC-ABC-12345"
-                  data-testid="input-license-number"
-                />
-              </div>
             </div>
           </div>
-
-          <Separator />
-
-          {/* Brand Colors */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">Brand Colors</h3>
-              <Badge variant="outline">Used in document headers</Badge>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="primaryColor">Primary Color</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="primaryColor"
-                    type="color"
-                    value={formData.primaryColor || "#2563eb"}
-                    onChange={(e) => handleInputChange("primaryColor", e.target.value)}
-                    className="w-16 h-10"
-                    data-testid="input-primary-color"
-                  />
-                  <Input
-                    value={formData.primaryColor || "#2563eb"}
-                    onChange={(e) => handleInputChange("primaryColor", e.target.value)}
-                    placeholder="#2563eb"
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="secondaryColor">Secondary Color</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="secondaryColor"
-                    type="color"
-                    value={formData.secondaryColor || "#1e40af"}
-                    onChange={(e) => handleInputChange("secondaryColor", e.target.value)}
-                    className="w-16 h-10"
-                    data-testid="input-secondary-color"
-                  />
-                  <Input
-                    value={formData.secondaryColor || "#1e40af"}
-                    onChange={(e) => handleInputChange("secondaryColor", e.target.value)}
-                    placeholder="#1e40af"
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-6">
-            <Button 
-              type="submit" 
-              disabled={updateMutation.isPending}
-              className="flex items-center gap-2"
-              data-testid="button-save-settings"
-            >
-              <Save className="h-4 w-4" />
-              {updateMutation.isPending ? "Saving..." : "Save Settings"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

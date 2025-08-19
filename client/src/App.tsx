@@ -9,6 +9,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Navigation from "@/components/Navigation";
 import { Menu, X } from "lucide-react";
 import Dashboard from "@/pages/Dashboard";
+import Invoices from "@/pages/Invoices";
+import Estimates from "@/pages/Estimates";
 import Documents from "@/pages/Documents";
 import Tracking from "@/pages/Tracking";
 import Contractors from "@/pages/Contractors";
@@ -74,6 +76,8 @@ function AppContent() {
         <main className="h-full overflow-y-auto">
           <Switch>
             <Route path="/" component={Dashboard} />
+            <Route path="/invoices" component={Invoices} />
+            <Route path="/estimates" component={Estimates} />
             <Route path="/documents" component={Documents} />
             <Route path="/tracking" component={Tracking} />
             <Route path="/contractors" component={Contractors} />
