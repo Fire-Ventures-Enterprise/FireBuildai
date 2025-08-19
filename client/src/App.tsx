@@ -24,7 +24,7 @@ import SettingsPage from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-background">
@@ -40,39 +40,42 @@ function AppContent() {
         </Button>
       </div>
 
-      {/* Navigation Sidebar */}
-      <div className={`
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        ${sidebarOpen ? 'w-64' : 'w-0'}
-        transition-all duration-300 ease-in-out
-        fixed md:relative z-40 h-full
-        flex flex-col bg-card border-r border-border
-        md:translate-x-0 md:w-64
-      `}>
-        <Navigation />
-      </div>
+      {/* Navigation Sidebar - Only show when opened */}
+      {sidebarOpen && (
+        <div className={`
+          fixed inset-y-0 left-0 z-40 w-64
+          transform transition-transform duration-300 ease-in-out
+          bg-card border-r border-border
+          flex flex-col
+        `}>
+          <Navigation />
+        </div>
+      )}
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
           onClick={() => setSidebarOpen(false)}
           data-testid="sidebar-overlay"
         />
       )}
       
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden md:ml-0">
-        {/* Desktop Menu Button */}
-        <div className="hidden md:block p-4">
+      <div className="flex-1 overflow-hidden">
+        {/* Header with Menu Button */}
+        <div className="flex items-center justify-between p-4 border-b border-border bg-card">
           <Button
             variant="outline"
             size="icon"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            data-testid="desktop-menu-toggle"
+            data-testid="menu-toggle"
           >
-            {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            <Menu className="h-4 w-4" />
           </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold">FireBuild.ai</span>
+          </div>
         </div>
 
         <main className="h-full overflow-y-auto">
