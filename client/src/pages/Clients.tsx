@@ -88,9 +88,23 @@ interface Communication {
 }
 
 const messageSchema = z.object({
-  type: z.enum(["sms", "email"]),
+  type: z.enum(["sms", "email", "call"]),
   subject: z.string().optional(),
-  content: z.string().min(1, "Message content is required"),
+  content: z.string().optional(),
+  duration: z.number().optional(),
+}).refine((data) => {
+  // Content is required for SMS and email
+  if ((data.type === "sms" || data.type === "email") && !data.content?.trim()) {
+    return false;
+  }
+  // Duration is required for calls
+  if (data.type === "call" && (!data.duration || data.duration <= 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please fill in all required fields",
+  path: ["content"], // This will show the error on the content field
 });
 
 type MessageFormData = z.infer<typeof messageSchema>;
@@ -126,6 +140,7 @@ export default function Clients() {
     defaultValues: {
       type: "email",
       content: "",
+      duration: 0,
     },
   });
 
@@ -140,17 +155,23 @@ export default function Clients() {
         subject: data.subject,
         content: data.content,
         emailAddress: data.type === "email" ? selectedClient.email : undefined,
-        phoneNumber: data.type === "sms" ? selectedClient.phone : undefined,
-        status: "sent",
+        phoneNumber: (data.type === "sms" || data.type === "call") ? selectedClient.phone : undefined,
+        duration: data.type === "call" ? data.duration : undefined,
+        status: data.type === "call" ? "completed" : "sent",
         sentAt: new Date(),
       };
 
       return apiRequest("POST", "/api/communications", messageData);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const actionText = variables.type === "call" ? "Call Recorded" : "Message Sent";
+      const descriptionText = variables.type === "call" 
+        ? "Your call has been recorded successfully." 
+        : "Your message has been sent successfully.";
+      
       toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully.",
+        title: actionText,
+        description: descriptionText,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/clients", selectedClient?.id, "communications"] });
       messageForm.reset();
@@ -210,9 +231,9 @@ export default function Clients() {
 
   const filteredClients = useMemo(() => {
     if (searchTerm.trim()) {
-      return searchResults || [];
+      return Array.isArray(searchResults) ? searchResults : [];
     }
-    return clients || [];
+    return Array.isArray(clients) ? clients : [];
   }, [clients, searchResults, searchTerm]);
 
   if (isLoading) {
@@ -351,7 +372,7 @@ export default function Clients() {
 
               {client.tags && client.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {client.tags.slice(0, 2).map((tag, index) => (
+                  {client.tags.slice(0, 2).map((tag: string, index: number) => (
                     <Badge key={index} variant="outline" className="text-xs px-2 py-1" data-testid={`tag-${tag}-${client.id}`}>
                       {tag}
                     </Badge>
@@ -660,7 +681,7 @@ export default function Clients() {
                               <DialogHeader>
                                 <DialogTitle>Send Message to {selectedClient?.name}</DialogTitle>
                                 <DialogDescription>
-                                  Send an SMS or email to this client
+                                  Send an SMS, email, or record a call with this client
                                 </DialogDescription>
                               </DialogHeader>
                               
@@ -691,6 +712,12 @@ export default function Clients() {
                                                 SMS
                                               </div>
                                             </SelectItem>
+                                            <SelectItem value="call">
+                                              <div className="flex items-center gap-2">
+                                                <PhoneCall className="h-4 w-4" />
+                                                Call
+                                              </div>
+                                            </SelectItem>
                                           </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -714,35 +741,78 @@ export default function Clients() {
                                     />
                                   )}
 
-                                  <FormField
-                                    control={messageForm.control}
-                                    name="content"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>
-                                          {messageForm.watch("type") === "email" ? "Email Content" : "SMS Message"}
-                                        </FormLabel>
-                                        <FormControl>
-                                          <Textarea
-                                            placeholder={
-                                              messageForm.watch("type") === "email"
-                                                ? "Enter your email message..."
-                                                : "Enter your SMS message (160 characters max)..."
-                                            }
-                                            rows={messageForm.watch("type") === "email" ? 6 : 3}
-                                            maxLength={messageForm.watch("type") === "sms" ? 160 : undefined}
-                                            {...field}
-                                          />
-                                        </FormControl>
-                                        {messageForm.watch("type") === "sms" && (
-                                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            {field.value?.length || 0}/160 characters
-                                          </p>
-                                        )}
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
+                                  {messageForm.watch("type") === "call" && (
+                                    <FormField
+                                      control={messageForm.control}
+                                      name="duration"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Call Duration (minutes)</FormLabel>
+                                          <FormControl>
+                                            <Input
+                                              type="number"
+                                              placeholder="Enter call duration in minutes"
+                                              {...field}
+                                              onChange={(e) => field.onChange(Number(e.target.value))}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  )}
+
+                                  {messageForm.watch("type") !== "call" && (
+                                    <FormField
+                                      control={messageForm.control}
+                                      name="content"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            {messageForm.watch("type") === "email" ? "Email Content" : "SMS Message"}
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Textarea
+                                              placeholder={
+                                                messageForm.watch("type") === "email"
+                                                  ? "Enter your email message..."
+                                                  : "Enter your SMS message (160 characters max)..."
+                                              }
+                                              rows={messageForm.watch("type") === "email" ? 6 : 3}
+                                              maxLength={messageForm.watch("type") === "sms" ? 160 : undefined}
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          {messageForm.watch("type") === "sms" && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                              {field.value?.length || 0}/160 characters
+                                            </p>
+                                          )}
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  )}
+
+                                  {messageForm.watch("type") === "call" && (
+                                    <FormField
+                                      control={messageForm.control}
+                                      name="content"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Call Notes (Optional)</FormLabel>
+                                          <FormControl>
+                                            <Textarea
+                                              placeholder="Enter any notes about the call..."
+                                              rows={4}
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  )}
 
                                   <div className="flex justify-end gap-2 pt-4">
                                     <Button 
@@ -757,8 +827,17 @@ export default function Clients() {
                                       disabled={sendMessageMutation.isPending}
                                       className="gap-2"
                                     >
-                                      <Send className="h-4 w-4" />
-                                      {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
+                                      {messageForm.watch("type") === "call" ? (
+                                        <PhoneCall className="h-4 w-4" />
+                                      ) : (
+                                        <Send className="h-4 w-4" />
+                                      )}
+                                      {sendMessageMutation.isPending 
+                                        ? "Processing..." 
+                                        : messageForm.watch("type") === "call" 
+                                          ? "Record Call" 
+                                          : "Send Message"
+                                      }
                                     </Button>
                                   </div>
                                 </form>
@@ -767,7 +846,7 @@ export default function Clients() {
                           </Dialog>
                         </div>
                         
-                        {clientCommunications && clientCommunications.length > 0 ? (
+                        {Array.isArray(clientCommunications) && clientCommunications.length > 0 ? (
                           <div className="space-y-3">
                             {clientCommunications.map((comm) => (
                               <Card key={comm.id} className="p-4">
