@@ -276,6 +276,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Company settings routes
+  app.get("/api/company-settings/:companyId", async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const settings = await storage.getCompanySettings(companyId);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching company settings:", error);
+      res.status(500).json({ message: "Failed to fetch company settings" });
+    }
+  });
+
+  app.put("/api/company-settings/:companyId", async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const updates = req.body;
+      const updatedSettings = await storage.updateCompanySettings(companyId, updates);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating company settings:", error);
+      res.status(500).json({ message: "Failed to update company settings" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates

@@ -16,7 +16,9 @@ import {
   type DocumentTemplate,
   type InsertDocumentTemplate,
   type JobDocument,
-  type InsertJobDocument
+  type InsertJobDocument,
+  type CompanySettings,
+  type InsertCompanySettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -141,6 +143,10 @@ export interface IStorage {
     uptime: number;
   }>;
 
+  // Company Settings
+  getCompanySettings(companyId: string): Promise<CompanySettings>;
+  updateCompanySettings(companyId: string, settings: Partial<CompanySettings>): Promise<CompanySettings>;
+
   // Document Management
   getDocumentTemplates(): Promise<DocumentTemplate[]>;
   createDocumentTemplate(template: InsertDocumentTemplate): Promise<DocumentTemplate>;
@@ -170,6 +176,7 @@ export class MemStorage implements IStorage {
   private clientMessages: Map<string, ClientMessage> = new Map();
   private documentTemplates: Map<string, DocumentTemplate> = new Map();
   private jobDocuments: Map<string, JobDocument> = new Map();
+  private companySettings: Map<string, CompanySettings> = new Map();
 
   constructor() {
     this.initializeMockData();
@@ -463,25 +470,230 @@ export class MemStorage implements IStorage {
     this.clientMessages.set(message1.id, message1);
     this.clientMessages.set(message2.id, message2);
 
+    // Initialize company settings
+    const defaultCompanySettings: CompanySettings = {
+      id: randomUUID(),
+      companyId: "company-1",
+      companyName: "ABC Contracting Inc.",
+      logoUrl: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=200&h=100&fit=crop",
+      address: "123 Construction Way",
+      city: "Builderville",
+      state: "CA",
+      zipCode: "90210",
+      phone: "(555) 123-4567",
+      email: "contact@abccontracting.com",
+      website: "www.abccontracting.com",
+      taxNumber: "12-3456789",
+      licenseNumber: "LIC-ABC-12345",
+      primaryColor: "#1e40af",
+      secondaryColor: "#2563eb",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.companySettings.set(defaultCompanySettings.companyId, defaultCompanySettings);
+
     // Initialize document templates
-    const legalTemplate: DocumentTemplate = {
+    const invoiceTemplate: DocumentTemplate = {
+      id: randomUUID(),
+      name: "Professional Invoice",
+      type: "invoice",
+      templateHtml: `
+        <div class="document" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333;">
+          <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid \${primaryColor}; padding-bottom: 20px;">
+            <div class="company-info">
+              <img src="\${logoUrl}" alt="\${companyName}" style="max-height: 80px; margin-bottom: 10px;" />
+              <h1 style="color: \${primaryColor}; margin: 0; font-size: 28px;">\${companyName}</h1>
+              <p style="margin: 5px 0; color: #666;">\${address}<br>\${city}, \${state} \${zipCode}<br>Phone: \${phone}<br>Email: \${email}<br>Website: \${website}</p>
+              <p style="margin: 5px 0; font-size: 12px; color: #888;">License: \${licenseNumber} | Tax ID: \${taxNumber}</p>
+            </div>
+            <div class="invoice-details" style="text-align: right;">
+              <h2 style="color: \${primaryColor}; margin: 0 0 10px 0;">INVOICE</h2>
+              <p style="margin: 5px 0;"><strong>Invoice #:</strong> \${invoiceNumber}</p>
+              <p style="margin: 5px 0;"><strong>Date:</strong> \${invoiceDate}</p>
+              <p style="margin: 5px 0;"><strong>Due Date:</strong> \${dueDate}</p>
+              <p style="margin: 5px 0;"><strong>Job #:</strong> \${jobNumber}</p>
+            </div>
+          </div>
+          <div class="client-info" style="margin-bottom: 30px;">
+            <h3 style="color: \${primaryColor}; margin-bottom: 10px;">Bill To:</h3>
+            <p style="margin: 5px 0;"><strong>\${clientName}</strong><br>\${clientAddress}<br>\${clientCity}, \${clientState} \${clientZip}<br>Phone: \${clientPhone}<br>Email: \${clientEmail}</p>
+          </div>
+          <div class="project-info" style="margin-bottom: 30px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <h3 style="color: \${primaryColor}; margin-top: 0;">Project Details:</h3>
+            <p style="margin: 5px 0;"><strong>Project:</strong> \${projectTitle}</p>
+            <p style="margin: 5px 0;"><strong>Description:</strong> \${projectDescription}</p>
+            <p style="margin: 5px 0;"><strong>Start Date:</strong> \${startDate}</p>
+            <p style="margin: 5px 0;"><strong>Completion Date:</strong> \${completionDate}</p>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+              <tr style="background: \${primaryColor}; color: white;">
+                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Description</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Qty</th>
+                <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Rate</th>
+                <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              \${lineItems}
+            </tbody>
+          </table>
+          <div class="totals" style="float: right; width: 300px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px; text-align: right;"><strong>Subtotal:</strong></td><td style="padding: 8px; text-align: right;">$\${subtotal}</td></tr>
+              <tr><td style="padding: 8px; text-align: right;"><strong>Tax (\${taxRate}%):</strong></td><td style="padding: 8px; text-align: right;">$\${taxAmount}</td></tr>
+              <tr style="border-top: 2px solid \${primaryColor}; background: #f8f9fa;"><td style="padding: 12px; text-align: right; font-size: 18px;"><strong>Total:</strong></td><td style="padding: 12px; text-align: right; font-size: 18px; color: \${primaryColor};"><strong>$\${totalAmount}</strong></td></tr>
+            </table>
+          </div>
+          <div style="clear: both; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <h4 style="color: \${primaryColor};">Payment Terms:</h4>
+            <p>Payment is due within 30 days of invoice date. Late payments may incur additional fees.</p>
+            <p><strong>Payment Methods:</strong> Check, Bank Transfer, Credit Card</p>
+            <p><strong>Questions?</strong> Contact us at \${phone} or \${email}</p>
+          </div>
+        </div>
+      `,
+      requiredFields: ["invoiceNumber", "invoiceDate", "dueDate", "jobNumber", "clientName", "clientAddress", "projectTitle", "lineItems", "subtotal", "taxRate", "taxAmount", "totalAmount"],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const estimateTemplate: DocumentTemplate = {
+      id: randomUUID(),
+      name: "Professional Estimate",
+      type: "estimate",
+      templateHtml: `
+        <div class="document" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333;">
+          <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid \${primaryColor}; padding-bottom: 20px;">
+            <div class="company-info">
+              <img src="\${logoUrl}" alt="\${companyName}" style="max-height: 80px; margin-bottom: 10px;" />
+              <h1 style="color: \${primaryColor}; margin: 0; font-size: 28px;">\${companyName}</h1>
+              <p style="margin: 5px 0; color: #666;">\${address}<br>\${city}, \${state} \${zipCode}<br>Phone: \${phone}<br>Email: \${email}<br>Website: \${website}</p>
+              <p style="margin: 5px 0; font-size: 12px; color: #888;">License: \${licenseNumber} | Tax ID: \${taxNumber}</p>
+            </div>
+            <div class="estimate-details" style="text-align: right;">
+              <h2 style="color: \${primaryColor}; margin: 0 0 10px 0;">ESTIMATE</h2>
+              <p style="margin: 5px 0;"><strong>Estimate #:</strong> \${estimateNumber}</p>
+              <p style="margin: 5px 0;"><strong>Date:</strong> \${estimateDate}</p>
+              <p style="margin: 5px 0;"><strong>Valid Until:</strong> \${validUntil}</p>
+            </div>
+          </div>
+          <div class="client-info" style="margin-bottom: 30px;">
+            <h3 style="color: \${primaryColor}; margin-bottom: 10px;">Prepared For:</h3>
+            <p style="margin: 5px 0;"><strong>\${clientName}</strong><br>\${clientAddress}<br>\${clientCity}, \${clientState} \${clientZip}<br>Phone: \${clientPhone}<br>Email: \${clientEmail}</p>
+          </div>
+          <div class="project-info" style="margin-bottom: 30px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <h3 style="color: \${primaryColor}; margin-top: 0;">Project Information:</h3>
+            <p style="margin: 5px 0;"><strong>Project:</strong> \${projectTitle}</p>
+            <p style="margin: 5px 0;"><strong>Description:</strong> \${projectDescription}</p>
+            <p style="margin: 5px 0;"><strong>Estimated Start:</strong> \${estimatedStart}</p>
+            <p style="margin: 5px 0;"><strong>Estimated Duration:</strong> \${estimatedDuration}</p>
+          </div>
+          <h3 style="color: \${primaryColor};">Scope of Work:</h3>
+          <div style="margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            \${scopeOfWork}
+          </div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+              <tr style="background: \${primaryColor}; color: white;">
+                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Description</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Qty</th>
+                <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Rate</th>
+                <th style="padding: 12px; text-align: right; border: 1px solid #ddd;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              \${lineItems}
+            </tbody>
+          </table>
+          <div class="totals" style="float: right; width: 300px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px; text-align: right;"><strong>Subtotal:</strong></td><td style="padding: 8px; text-align: right;">$\${subtotal}</td></tr>
+              <tr><td style="padding: 8px; text-align: right;"><strong>Tax (\${taxRate}%):</strong></td><td style="padding: 8px; text-align: right;">$\${taxAmount}</td></tr>
+              <tr style="border-top: 2px solid \${primaryColor}; background: #f8f9fa;"><td style="padding: 12px; text-align: right; font-size: 18px;"><strong>Total Estimate:</strong></td><td style="padding: 12px; text-align: right; font-size: 18px; color: \${primaryColor};"><strong>$\${totalAmount}</strong></td></tr>
+            </table>
+          </div>
+          <div style="clear: both; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <h4 style="color: \${primaryColor};">Terms & Conditions:</h4>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li>This estimate is valid for 30 days from the date above</li>
+              <li>50% deposit required to begin work</li>
+              <li>Final pricing may vary based on actual conditions encountered</li>
+              <li>All work will be performed according to local building codes</li>
+              <li>Customer is responsible for permits unless otherwise specified</li>
+            </ul>
+            <p style="margin-top: 20px;"><strong>Questions?</strong> Contact us at \${phone} or \${email}</p>
+          </div>
+        </div>
+      `,
+      requiredFields: ["estimateNumber", "estimateDate", "validUntil", "clientName", "clientAddress", "projectTitle", "scopeOfWork", "lineItems", "subtotal", "taxRate", "taxAmount", "totalAmount"],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const stopWorkTemplate: DocumentTemplate = {
       id: randomUUID(),
       name: "Stop Work Order",
       type: "stop_work",
       templateHtml: `
-        <div class="document">
-          <h1>STOP WORK ORDER</h1>
-          <p><strong>Job:</strong> \${jobTitle}</p>
-          <p><strong>Client:</strong> \${clientName}</p>
-          <p><strong>Address:</strong> \${clientAddress}</p>
-          <p><strong>Date:</strong> \${date}</p>
-          <p><strong>Reason:</strong> \${reason}</p>
-          <p>Work on the above-mentioned project is hereby ordered to stop immediately due to the reason stated above.</p>
-          <p><strong>Contractor Signature:</strong> ______________________</p>
-          <p><strong>Client Signature:</strong> ______________________</p>
+        <div class="document" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333;">
+          <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid #dc2626; padding-bottom: 20px;">
+            <div class="company-info">
+              <img src="\${logoUrl}" alt="\${companyName}" style="max-height: 80px; margin-bottom: 10px;" />
+              <h1 style="color: \${primaryColor}; margin: 0; font-size: 28px;">\${companyName}</h1>
+              <p style="margin: 5px 0; color: #666;">\${address}<br>\${city}, \${state} \${zipCode}<br>Phone: \${phone}<br>Email: \${email}</p>
+              <p style="margin: 5px 0; font-size: 12px; color: #888;">License: \${licenseNumber}</p>
+            </div>
+            <div class="notice-details" style="text-align: right;">
+              <h2 style="color: #dc2626; margin: 0 0 10px 0; font-size: 32px;">STOP WORK ORDER</h2>
+              <p style="margin: 5px 0; background: #fee2e2; padding: 8px; border-radius: 4px;"><strong>Order #:</strong> \${orderNumber}</p>
+              <p style="margin: 5px 0;"><strong>Date Issued:</strong> \${dateIssued}</p>
+            </div>
+          </div>
+          <div class="client-info" style="margin-bottom: 30px; background: #fef2f2; padding: 15px; border-radius: 5px; border-left: 4px solid #dc2626;">
+            <h3 style="color: #dc2626; margin-bottom: 10px;">Project Information:</h3>
+            <p style="margin: 5px 0;"><strong>Client:</strong> \${clientName}</p>
+            <p style="margin: 5px 0;"><strong>Project:</strong> \${projectTitle}</p>
+            <p style="margin: 5px 0;"><strong>Location:</strong> \${projectAddress}</p>
+            <p style="margin: 5px 0;"><strong>Job #:</strong> \${jobNumber}</p>
+          </div>
+          <div class="notice-content" style="margin-bottom: 30px; padding: 20px; border: 2px solid #dc2626; border-radius: 5px; background: #fef2f2;">
+            <h3 style="color: #dc2626; margin-top: 0;">NOTICE TO STOP WORK</h3>
+            <p style="font-size: 16px; line-height: 1.6;"><strong>You are hereby notified to stop all work on the above-mentioned project immediately.</strong></p>
+            <div style="margin: 20px 0;">
+              <h4 style="color: #dc2626;">Reason for Stop Work Order:</h4>
+              <p style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #fecaca;">\${reason}</p>
+            </div>
+            <div style="margin: 20px 0;">
+              <h4 style="color: #dc2626;">Required Actions:</h4>
+              <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #fecaca;">\${requiredActions}</div>
+            </div>
+          </div>
+          <div class="signatures" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <div style="display: flex; justify-content: space-between;">
+              <div style="width: 45%;">
+                <h4 style="color: \${primaryColor};">Contractor Acknowledgment:</h4>
+                <p style="margin-bottom: 40px;">I acknowledge receipt of this Stop Work Order and understand that all work must cease immediately.</p>
+                <div style="border-top: 1px solid #333; width: 200px; margin-top: 20px; padding-top: 5px;">
+                  <p style="margin: 0; font-size: 12px;">Contractor Signature / Date</p>
+                </div>
+              </div>
+              <div style="width: 45%;">
+                <h4 style="color: \${primaryColor};">Issued By:</h4>
+                <p style="margin: 5px 0;"><strong>\${issuedBy}</strong></p>
+                <p style="margin: 5px 0;">\${issuedByTitle}</p>
+                <div style="border-top: 1px solid #333; width: 200px; margin-top: 40px; padding-top: 5px;">
+                  <p style="margin: 0; font-size: 12px;">Signature / Date</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       `,
-      requiredFields: ["jobTitle", "clientName", "clientAddress", "reason"],
+      requiredFields: ["orderNumber", "dateIssued", "clientName", "projectTitle", "projectAddress", "jobNumber", "reason", "requiredActions", "issuedBy", "issuedByTitle"],
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -492,19 +704,90 @@ export class MemStorage implements IStorage {
       name: "Work Order",
       type: "work_order",
       templateHtml: `
-        <div class="document">
-          <h1>WORK ORDER</h1>
-          <p><strong>Work Order #:</strong> \${workOrderNumber}</p>
-          <p><strong>Job:</strong> \${jobTitle}</p>
-          <p><strong>Worker:</strong> \${contractorName}</p>
-          <p><strong>Description:</strong> \${workDescription}</p>
-          <p><strong>Materials Needed:</strong> \${materials}</p>
-          <p><strong>Estimated Time:</strong> \${estimatedTime}</p>
-          <p><strong>Special Instructions:</strong> \${specialInstructions}</p>
-          <p><strong>Supervisor Signature:</strong> ______________________</p>
+        <div class="document" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333;">
+          <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid \${primaryColor}; padding-bottom: 20px;">
+            <div class="company-info">
+              <img src="\${logoUrl}" alt="\${companyName}" style="max-height: 80px; margin-bottom: 10px;" />
+              <h1 style="color: \${primaryColor}; margin: 0; font-size: 28px;">\${companyName}</h1>
+              <p style="margin: 5px 0; color: #666;">\${address}<br>\${city}, \${state} \${zipCode}<br>Phone: \${phone}<br>Email: \${email}</p>
+              <p style="margin: 5px 0; font-size: 12px; color: #888;">License: \${licenseNumber}</p>
+            </div>
+            <div class="work-order-details" style="text-align: right;">
+              <h2 style="color: \${primaryColor}; margin: 0 0 10px 0;">WORK ORDER</h2>
+              <p style="margin: 5px 0;"><strong>Work Order #:</strong> \${workOrderNumber}</p>
+              <p style="margin: 5px 0;"><strong>Date Issued:</strong> \${dateIssued}</p>
+              <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="background: \${priorityColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">\${priority}</span></p>
+            </div>
+          </div>
+          <div class="assignment-info" style="margin-bottom: 30px; background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid \${primaryColor};">
+            <h3 style="color: \${primaryColor}; margin-top: 0;">Assignment Details:</h3>
+            <div style="display: flex; justify-content: space-between;">
+              <div style="width: 48%;">
+                <p style="margin: 5px 0;"><strong>Assigned To:</strong> \${assignedContractor}</p>
+                <p style="margin: 5px 0;"><strong>Supervisor:</strong> \${supervisor}</p>
+                <p style="margin: 5px 0;"><strong>Job Site:</strong> \${jobSite}</p>
+              </div>
+              <div style="width: 48%;">
+                <p style="margin: 5px 0;"><strong>Start Date:</strong> \${startDate}</p>
+                <p style="margin: 5px 0;"><strong>Expected Completion:</strong> \${expectedCompletion}</p>
+                <p style="margin: 5px 0;"><strong>Estimated Hours:</strong> \${estimatedHours}</p>
+              </div>
+            </div>
+          </div>
+          <div class="work-description" style="margin-bottom: 30px;">
+            <h3 style="color: \${primaryColor}; margin-bottom: 10px;">Work Description:</h3>
+            <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+              \${workDescription}
+            </div>
+          </div>
+          <div class="materials-tools" style="margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between;">
+              <div style="width: 48%;">
+                <h4 style="color: \${primaryColor};">Materials Required:</h4>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+                  \${materialsRequired}
+                </div>
+              </div>
+              <div style="width: 48%;">
+                <h4 style="color: \${primaryColor};">Tools Required:</h4>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+                  \${toolsRequired}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="safety-notes" style="margin-bottom: 30px; background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <h4 style="color: #856404; margin-top: 0;">Safety Requirements & Special Instructions:</h4>
+            <div>\${safetyInstructions}</div>
+          </div>
+          <div class="sign-off" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <div style="display: flex; justify-content: space-between;">
+              <div style="width: 30%;">
+                <h4 style="color: \${primaryColor};">Issued By:</h4>
+                <p style="margin: 5px 0;">\${issuedBy}</p>
+                <div style="border-top: 1px solid #333; width: 150px; margin-top: 30px; padding-top: 5px;">
+                  <p style="margin: 0; font-size: 12px;">Supervisor Signature / Date</p>
+                </div>
+              </div>
+              <div style="width: 30%;">
+                <h4 style="color: \${primaryColor};">Accepted By:</h4>
+                <p style="margin: 5px 0;">\${assignedContractor}</p>
+                <div style="border-top: 1px solid #333; width: 150px; margin-top: 30px; padding-top: 5px;">
+                  <p style="margin: 0; font-size: 12px;">Worker Signature / Date</p>
+                </div>
+              </div>
+              <div style="width: 30%;">
+                <h4 style="color: \${primaryColor};">Completed:</h4>
+                <p style="margin: 5px 0;">____/____/____</p>
+                <div style="border-top: 1px solid #333; width: 150px; margin-top: 30px; padding-top: 5px;">
+                  <p style="margin: 0; font-size: 12px;">Completion Signature / Date</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       `,
-      requiredFields: ["workOrderNumber", "jobTitle", "contractorName", "workDescription"],
+      requiredFields: ["workOrderNumber", "dateIssued", "priority", "assignedContractor", "supervisor", "jobSite", "startDate", "expectedCompletion", "estimatedHours", "workDescription", "materialsRequired", "toolsRequired", "safetyInstructions", "issuedBy"],
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -515,18 +798,53 @@ export class MemStorage implements IStorage {
       name: "Collection Notice",
       type: "collection",
       templateHtml: `
-        <div class="document">
-          <h1>COLLECTION NOTICE</h1>
-          <p><strong>Invoice #:</strong> \${invoiceNumber}</p>
-          <p><strong>Client:</strong> \${clientName}</p>
-          <p><strong>Amount Due:</strong> $\${amountDue}</p>
-          <p><strong>Due Date:</strong> \${dueDate}</p>
-          <p>This notice serves as a formal request for payment of the outstanding balance shown above.</p>
-          <p>Please remit payment within 10 days to avoid additional collection fees.</p>
-          <p><strong>Company Representative:</strong> ______________________</p>
+        <div class="document" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333;">
+          <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid #dc2626; padding-bottom: 20px;">
+            <div class="company-info">
+              <img src="\${logoUrl}" alt="\${companyName}" style="max-height: 80px; margin-bottom: 10px;" />
+              <h1 style="color: \${primaryColor}; margin: 0; font-size: 28px;">\${companyName}</h1>
+              <p style="margin: 5px 0; color: #666;">\${address}<br>\${city}, \${state} \${zipCode}<br>Phone: \${phone}<br>Email: \${email}</p>
+              <p style="margin: 5px 0; font-size: 12px; color: #888;">License: \${licenseNumber}</p>
+            </div>
+            <div class="notice-details" style="text-align: right;">
+              <h2 style="color: #dc2626; margin: 0 0 10px 0; font-size: 28px;">COLLECTION NOTICE</h2>
+              <p style="margin: 5px 0; background: #fee2e2; padding: 8px; border-radius: 4px;"><strong>Notice #:</strong> \${noticeNumber}</p>
+              <p style="margin: 5px 0;"><strong>Date:</strong> \${noticeDate}</p>
+            </div>
+          </div>
+          <div class="client-info" style="margin-bottom: 30px;">
+            <h3 style="color: #dc2626; margin-bottom: 10px;">Account Information:</h3>
+            <p style="margin: 5px 0;"><strong>Account Holder:</strong> \${clientName}</p>
+            <p style="margin: 5px 0;"><strong>Address:</strong> \${clientAddress}</p>
+            <p style="margin: 5px 0;"><strong>Account #:</strong> \${accountNumber}</p>
+          </div>
+          <div class="invoice-details" style="margin-bottom: 30px; background: #fef2f2; padding: 15px; border-radius: 5px; border-left: 4px solid #dc2626;">
+            <h3 style="color: #dc2626; margin-top: 0;">Outstanding Invoice Details:</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Invoice #:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">\${invoiceNumber}</td></tr>
+              <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Due Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">\${dueDate}</td></tr>
+              <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Days Overdue:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd; color: #dc2626; font-weight: bold;">\${daysOverdue}</td></tr>
+              <tr style="background: #fee2e2;"><td style="padding: 12px; font-size: 18px;"><strong>Amount Due:</strong></td><td style="padding: 12px; font-size: 18px; color: #dc2626; font-weight: bold;">$\${amountDue}</td></tr>
+            </table>
+          </div>
+          <div class="notice-content" style="margin-bottom: 30px; padding: 20px; border: 2px solid #dc2626; border-radius: 5px; background: #fef2f2;">
+            <h3 style="color: #dc2626; margin-top: 0;">PAYMENT DEMAND NOTICE</h3>
+            <p style="font-size: 16px; line-height: 1.6;">This is a formal notice that your account is \${daysOverdue} days past due. Immediate payment is required to avoid further collection actions.</p>
+            <h4 style="color: #dc2626; margin-top: 20px;">Payment Options:</h4>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li><strong>Phone:</strong> Call \${phone} to pay by credit card</li>
+              <li><strong>Mail:</strong> Send check to \${address}, \${city}, \${state} \${zipCode}</li>
+              <li><strong>In Person:</strong> Visit our office during business hours</li>
+            </ul>
+          </div>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <h4 style="color: \${primaryColor};">Questions or Concerns?</h4>
+            <p>Contact us immediately at \${phone} or \${email}.</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #666;">This is an attempt to collect a debt. Any information obtained will be used for that purpose.</p>
+          </div>
         </div>
       `,
-      requiredFields: ["invoiceNumber", "clientName", "amountDue", "dueDate"],
+      requiredFields: ["noticeNumber", "noticeDate", "clientName", "clientAddress", "accountNumber", "invoiceNumber", "dueDate", "daysOverdue", "amountDue"],
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -578,7 +896,9 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
 
-    this.documentTemplates.set(legalTemplate.id, legalTemplate);
+    this.documentTemplates.set(invoiceTemplate.id, invoiceTemplate);
+    this.documentTemplates.set(estimateTemplate.id, estimateTemplate);
+    this.documentTemplates.set(stopWorkTemplate.id, stopWorkTemplate);
     this.documentTemplates.set(workOrderTemplate.id, workOrderTemplate);
     this.documentTemplates.set(collectionTemplate.id, collectionTemplate);
     this.documentTemplates.set(scopeTemplate.id, scopeTemplate);
@@ -809,6 +1129,31 @@ export class MemStorage implements IStorage {
       message.repliedAt = new Date();
       this.clientMessages.set(messageId, message);
     }
+  }
+
+  // Company Settings methods
+  async getCompanySettings(companyId: string): Promise<CompanySettings> {
+    const settings = this.companySettings.get(companyId);
+    if (!settings) {
+      throw new Error(`Company settings not found for company ${companyId}`);
+    }
+    return settings;
+  }
+
+  async updateCompanySettings(companyId: string, updates: Partial<CompanySettings>): Promise<CompanySettings> {
+    const existing = this.companySettings.get(companyId);
+    if (!existing) {
+      throw new Error(`Company settings not found for company ${companyId}`);
+    }
+    
+    const updated: CompanySettings = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.companySettings.set(companyId, updated);
+    return updated;
   }
 
   async getClientStats() {

@@ -17,6 +17,26 @@ export const companies = pgTable("companies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const companySettings = pgTable("company_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").references(() => companies.id).notNull().unique(),
+  companyName: text("company_name").notNull(),
+  logoUrl: text("logo_url"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  taxNumber: text("tax_number"),
+  licenseNumber: text("license_number"),
+  primaryColor: text("primary_color").default("#2563eb"),
+  secondaryColor: text("secondary_color").default("#1e40af"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const contractors = pgTable("contractors", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").references(() => companies.id).notNull(),
@@ -164,6 +184,7 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true,
 export const insertClientMessageSchema = createInsertSchema(clientMessages).omit({ id: true, createdAt: true });
 export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertJobDocumentSchema = createInsertSchema(jobDocuments).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCompanySettingsSchema = createInsertSchema(companySettings).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -188,3 +209,5 @@ export type DocumentTemplate = typeof documentTemplates.$inferSelect;
 export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;
 export type JobDocument = typeof jobDocuments.$inferSelect;
 export type InsertJobDocument = z.infer<typeof insertJobDocumentSchema>;
+export type CompanySettings = typeof companySettings.$inferSelect;
+export type InsertCompanySettings = z.infer<typeof insertCompanySettingsSchema>;

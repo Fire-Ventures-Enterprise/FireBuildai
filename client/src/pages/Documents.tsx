@@ -6,12 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Download, Send, Edit3 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CompanySettingsForm } from "@/components/CompanySettingsForm";
+import { FileText, Plus, Download, Send, Edit3, Settings, Files, Building2 } from "lucide-react";
 import type { DocumentTemplate, ClientDocument } from "@shared/schema";
 
 export default function Documents() {
-  const [activeTab, setActiveTab] = useState("templates");
   const queryClient = useQueryClient();
+  const companyId = "default"; // In a real app, this would come from user context
 
   // Queries
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
@@ -53,37 +55,35 @@ export default function Documents() {
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={() => setActiveTab("templates")}
-              className={`px-4 py-2 rounded-md transition-colors ${
-                activeTab === "templates"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
+        <Tabs defaultValue="templates" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-800">
+            <TabsTrigger 
+              value="templates" 
+              className="flex items-center gap-2 data-[state=active]:bg-blue-600"
               data-testid="tab-templates"
             >
+              <FileText className="h-4 w-4" />
               Templates
-            </button>
-            <button
-              onClick={() => setActiveTab("documents")}
-              className={`px-4 py-2 rounded-md transition-colors ${
-                activeTab === "documents"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents" 
+              className="flex items-center gap-2 data-[state=active]:bg-blue-600"
               data-testid="tab-documents"
             >
+              <Files className="h-4 w-4" />
               Documents
-            </button>
-          </div>
-        </div>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="flex items-center gap-2 data-[state=active]:bg-blue-600"
+              data-testid="tab-settings"
+            >
+              <Settings className="h-4 w-4" />
+              Branding
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Templates Tab */}
-        {activeTab === "templates" && (
-          <div>
+          <TabsContent value="templates" className="space-y-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold" data-testid="templates-heading">
                 Document Templates
@@ -154,12 +154,9 @@ export default function Documents() {
                 ))}
               </div>
             )}
-          </div>
-        )}
+          </TabsContent>
 
-        {/* Documents Tab */}
-        {activeTab === "documents" && (
-          <div>
+          <TabsContent value="documents" className="space-y-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold" data-testid="documents-heading">
                 Client Documents
@@ -243,8 +240,12 @@ export default function Documents() {
                 ))}
               </div>
             )}
-          </div>
-        )}
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <CompanySettingsForm companyId={companyId} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
