@@ -190,6 +190,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document Management endpoints
+  app.get("/api/document-templates", async (req, res) => {
+    try {
+      const templates = await storage.getDocumentTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching document templates:", error);
+      res.status(500).json({ message: "Failed to fetch document templates" });
+    }
+  });
+
+  app.post("/api/document-templates", async (req, res) => {
+    try {
+      const template = await storage.createDocumentTemplate(req.body);
+      res.json(template);
+    } catch (error) {
+      console.error("Error creating document template:", error);
+      res.status(500).json({ message: "Failed to create document template" });
+    }
+  });
+
+  app.get("/api/jobs/:jobId/documents", async (req, res) => {
+    try {
+      const documents = await storage.getJobDocuments(req.params.jobId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching job documents:", error);
+      res.status(500).json({ message: "Failed to fetch job documents" });
+    }
+  });
+
+  app.post("/api/jobs/:jobId/documents", async (req, res) => {
+    try {
+      const document = await storage.createJobDocument({
+        ...req.body,
+        jobId: req.params.jobId,
+      });
+      res.json(document);
+    } catch (error) {
+      console.error("Error creating job document:", error);
+      res.status(500).json({ message: "Failed to create job document" });
+    }
+  });
+
+  app.put("/api/documents/:documentId", async (req, res) => {
+    try {
+      const document = await storage.updateJobDocument(req.params.documentId, req.body);
+      res.json(document);
+    } catch (error) {
+      console.error("Error updating document:", error);
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.get("/api/jobs/:jobId/client-documents", async (req, res) => {
+    try {
+      const documents = await storage.getClientDocuments(req.params.jobId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching client documents:", error);
+      res.status(500).json({ message: "Failed to fetch client documents" });
+    }
+  });
+
+  // General client documents endpoint (for Documents page)
+  app.get("/api/client-documents", async (req, res) => {
+    try {
+      const documents = await storage.getAllClientDocuments();
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching all client documents:", error);
+      res.status(500).json({ message: "Failed to fetch client documents" });
+    }
+  });
+
+  // Create client document endpoint
+  app.post("/api/client-documents", async (req, res) => {
+    try {
+      const document = await storage.createClientDocument(req.body);
+      res.json(document);
+    } catch (error) {
+      console.error("Error creating client document:", error);
+      res.status(500).json({ message: "Failed to create client document" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates

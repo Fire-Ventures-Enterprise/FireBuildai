@@ -125,6 +125,33 @@ export const clientMessages = pgTable("client_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const documentTemplates = pgTable("document_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // legal, work_order, stop_work, job_addon, scope, collection
+  templateHtml: text("template_html").notNull(),
+  requiredFields: jsonb("required_fields"), // JSON array of field names
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const jobDocuments = pgTable("job_documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").references(() => jobs.id).notNull(),
+  templateId: varchar("template_id").references(() => documentTemplates.id),
+  documentName: text("document_name").notNull(),
+  documentType: text("document_type").notNull(),
+  documentUrl: text("document_url").notNull(), // URL to signed document
+  status: text("status").notNull().default("draft"), // draft, sent, signed, completed
+  signedBy: text("signed_by"),
+  signedAt: timestamp("signed_at"),
+  isClientVisible: boolean("is_client_visible").default(true),
+  formData: jsonb("form_data"), // filled template data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
 export const insertCompanySchema = createInsertSchema(companies).omit({ id: true, createdAt: true, updatedAt: true });
@@ -135,6 +162,8 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true,
 export const insertReviewSchema = createInsertSchema(reviews).omit({ id: true, createdAt: true });
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertClientMessageSchema = createInsertSchema(clientMessages).omit({ id: true, createdAt: true });
+export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertJobDocumentSchema = createInsertSchema(jobDocuments).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -155,3 +184,7 @@ export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
 export type ClientMessage = typeof clientMessages.$inferSelect;
 export type InsertClientMessage = z.infer<typeof insertClientMessageSchema>;
+export type DocumentTemplate = typeof documentTemplates.$inferSelect;
+export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;
+export type JobDocument = typeof jobDocuments.$inferSelect;
+export type InsertJobDocument = z.infer<typeof insertJobDocumentSchema>;

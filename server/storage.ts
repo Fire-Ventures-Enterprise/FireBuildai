@@ -12,7 +12,11 @@ import {
   type Vehicle,
   type InsertVehicle,
   type ClientMessage,
-  type InsertClientMessage
+  type InsertClientMessage,
+  type DocumentTemplate,
+  type InsertDocumentTemplate,
+  type JobDocument,
+  type InsertJobDocument
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -136,6 +140,24 @@ export interface IStorage {
     milesToday: number;
     uptime: number;
   }>;
+
+  // Document Management
+  getDocumentTemplates(): Promise<DocumentTemplate[]>;
+  createDocumentTemplate(template: InsertDocumentTemplate): Promise<DocumentTemplate>;
+  getJobDocuments(jobId: string): Promise<JobDocument[]>;
+  createJobDocument(document: InsertJobDocument): Promise<JobDocument>;
+  updateJobDocument(documentId: string, updates: Partial<JobDocument>): Promise<JobDocument>;
+  getClientDocuments(jobId: string): Promise<Array<{
+    id: string;
+    documentName: string;
+    documentType: string;
+    status: string;
+    signedAt?: Date;
+    signedBy?: string;
+    documentUrl: string;
+  }>>;
+  getAllClientDocuments(): Promise<any[]>;
+  createClientDocument(document: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -146,6 +168,8 @@ export class MemStorage implements IStorage {
   private reviews: Map<string, Review> = new Map();
   private vehicles: Map<string, Vehicle> = new Map();
   private clientMessages: Map<string, ClientMessage> = new Map();
+  private documentTemplates: Map<string, DocumentTemplate> = new Map();
+  private jobDocuments: Map<string, JobDocument> = new Map();
 
   constructor() {
     this.initializeMockData();
@@ -438,6 +462,175 @@ export class MemStorage implements IStorage {
 
     this.clientMessages.set(message1.id, message1);
     this.clientMessages.set(message2.id, message2);
+
+    // Initialize document templates
+    const legalTemplate: DocumentTemplate = {
+      id: randomUUID(),
+      name: "Stop Work Order",
+      type: "stop_work",
+      templateHtml: `
+        <div class="document">
+          <h1>STOP WORK ORDER</h1>
+          <p><strong>Job:</strong> \${jobTitle}</p>
+          <p><strong>Client:</strong> \${clientName}</p>
+          <p><strong>Address:</strong> \${clientAddress}</p>
+          <p><strong>Date:</strong> \${date}</p>
+          <p><strong>Reason:</strong> \${reason}</p>
+          <p>Work on the above-mentioned project is hereby ordered to stop immediately due to the reason stated above.</p>
+          <p><strong>Contractor Signature:</strong> ______________________</p>
+          <p><strong>Client Signature:</strong> ______________________</p>
+        </div>
+      `,
+      requiredFields: ["jobTitle", "clientName", "clientAddress", "reason"],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const workOrderTemplate: DocumentTemplate = {
+      id: randomUUID(),
+      name: "Work Order",
+      type: "work_order",
+      templateHtml: `
+        <div class="document">
+          <h1>WORK ORDER</h1>
+          <p><strong>Work Order #:</strong> \${workOrderNumber}</p>
+          <p><strong>Job:</strong> \${jobTitle}</p>
+          <p><strong>Worker:</strong> \${contractorName}</p>
+          <p><strong>Description:</strong> \${workDescription}</p>
+          <p><strong>Materials Needed:</strong> \${materials}</p>
+          <p><strong>Estimated Time:</strong> \${estimatedTime}</p>
+          <p><strong>Special Instructions:</strong> \${specialInstructions}</p>
+          <p><strong>Supervisor Signature:</strong> ______________________</p>
+        </div>
+      `,
+      requiredFields: ["workOrderNumber", "jobTitle", "contractorName", "workDescription"],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const collectionTemplate: DocumentTemplate = {
+      id: randomUUID(),
+      name: "Collection Notice",
+      type: "collection",
+      templateHtml: `
+        <div class="document">
+          <h1>COLLECTION NOTICE</h1>
+          <p><strong>Invoice #:</strong> \${invoiceNumber}</p>
+          <p><strong>Client:</strong> \${clientName}</p>
+          <p><strong>Amount Due:</strong> $\${amountDue}</p>
+          <p><strong>Due Date:</strong> \${dueDate}</p>
+          <p>This notice serves as a formal request for payment of the outstanding balance shown above.</p>
+          <p>Please remit payment within 10 days to avoid additional collection fees.</p>
+          <p><strong>Company Representative:</strong> ______________________</p>
+        </div>
+      `,
+      requiredFields: ["invoiceNumber", "clientName", "amountDue", "dueDate"],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const scopeTemplate: DocumentTemplate = {
+      id: randomUUID(),
+      name: "Scope of Work",
+      type: "scope",
+      templateHtml: `
+        <div class="document">
+          <h1>SCOPE OF WORK</h1>
+          <p><strong>Project:</strong> \${projectName}</p>
+          <p><strong>Client:</strong> \${clientName}</p>
+          <p><strong>Project Description:</strong> \${projectDescription}</p>
+          <p><strong>Deliverables:</strong> \${deliverables}</p>
+          <p><strong>Timeline:</strong> \${timeline}</p>
+          <p><strong>Total Cost:</strong> $\${totalCost}</p>
+          <p><strong>Client Signature:</strong> ______________________</p>
+          <p><strong>Contractor Signature:</strong> ______________________</p>
+        </div>
+      `,
+      requiredFields: ["projectName", "clientName", "projectDescription", "deliverables", "timeline", "totalCost"],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const jobAddonTemplate: DocumentTemplate = {
+      id: randomUUID(),
+      name: "Job Add-on Request",
+      type: "job_addon",
+      templateHtml: `
+        <div class="document">
+          <h1>JOB ADD-ON REQUEST</h1>
+          <p><strong>Original Job:</strong> \${originalJobTitle}</p>
+          <p><strong>Add-on Description:</strong> \${addonDescription}</p>
+          <p><strong>Additional Cost:</strong> $\${additionalCost}</p>
+          <p><strong>Estimated Time:</strong> \${estimatedTime}</p>
+          <p><strong>Materials Required:</strong> \${materialsRequired}</p>
+          <p>Client approval required for this additional work.</p>
+          <p><strong>Client Signature:</strong> ______________________</p>
+          <p><strong>Date:</strong> \${date}</p>
+        </div>
+      `,
+      requiredFields: ["originalJobTitle", "addonDescription", "additionalCost", "estimatedTime"],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.documentTemplates.set(legalTemplate.id, legalTemplate);
+    this.documentTemplates.set(workOrderTemplate.id, workOrderTemplate);
+    this.documentTemplates.set(collectionTemplate.id, collectionTemplate);
+    this.documentTemplates.set(scopeTemplate.id, scopeTemplate);
+    this.documentTemplates.set(jobAddonTemplate.id, jobAddonTemplate);
+
+    // Initialize some sample job documents
+    const sampleDocument1: JobDocument = {
+      id: randomUUID(),
+      jobId: job1.id,
+      templateId: scopeTemplate.id,
+      documentName: "Kitchen Renovation Scope",
+      documentType: "scope",
+      documentUrl: "/objects/documents/scope-kitchen-renovation.pdf",
+      status: "signed",
+      signedBy: "The Johnson Residence",
+      signedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      isClientVisible: true,
+      formData: {
+        projectName: "Kitchen Renovation",
+        clientName: "The Johnson Residence",
+        projectDescription: "Complete kitchen remodel including cabinets, countertops, and appliances",
+        deliverables: "New cabinets, granite countertops, stainless steel appliances",
+        timeline: "4-6 weeks",
+        totalCost: "12500.00"
+      },
+      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    };
+
+    const sampleDocument2: JobDocument = {
+      id: randomUUID(),
+      jobId: job2.id,
+      templateId: workOrderTemplate.id,
+      documentName: "Plumbing Work Order",
+      documentType: "work_order",
+      documentUrl: "/objects/documents/work-order-plumbing.pdf",
+      status: "completed",
+      signedBy: "Mike Johnson",
+      signedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      isClientVisible: false,
+      formData: {
+        workOrderNumber: "WO-2024-001",
+        jobTitle: "Bathroom Remodel",
+        contractorName: "Mike Johnson",
+        workDescription: "Install new plumbing fixtures and update water lines"
+      },
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    };
+
+    this.jobDocuments.set(sampleDocument1.id, sampleDocument1);
+    this.jobDocuments.set(sampleDocument2.id, sampleDocument2);
   }
 
   async getMetrics() {
@@ -669,6 +862,117 @@ export class MemStorage implements IStorage {
     } else {
       return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     }
+  }
+
+  // Document Management Methods
+  async getDocumentTemplates(): Promise<DocumentTemplate[]> {
+    return Array.from(this.documentTemplates.values())
+      .filter(template => template.isActive)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async createDocumentTemplate(template: InsertDocumentTemplate): Promise<DocumentTemplate> {
+    const newTemplate: DocumentTemplate = {
+      ...template,
+      id: randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.documentTemplates.set(newTemplate.id, newTemplate);
+    return newTemplate;
+  }
+
+  async getJobDocuments(jobId: string): Promise<JobDocument[]> {
+    return Array.from(this.jobDocuments.values())
+      .filter(doc => doc.jobId === jobId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createJobDocument(document: InsertJobDocument): Promise<JobDocument> {
+    const newDocument: JobDocument = {
+      ...document,
+      id: randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.jobDocuments.set(newDocument.id, newDocument);
+    return newDocument;
+  }
+
+  async updateJobDocument(documentId: string, updates: Partial<JobDocument>): Promise<JobDocument> {
+    const existingDocument = this.jobDocuments.get(documentId);
+    if (!existingDocument) {
+      throw new Error("Document not found");
+    }
+
+    const updatedDocument: JobDocument = {
+      ...existingDocument,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.jobDocuments.set(documentId, updatedDocument);
+    return updatedDocument;
+  }
+
+  async getClientDocuments(jobId: string): Promise<Array<{
+    id: string;
+    documentName: string;
+    documentType: string;
+    status: string;
+    signedAt?: Date;
+    signedBy?: string;
+    documentUrl: string;
+  }>> {
+    return Array.from(this.jobDocuments.values())
+      .filter(doc => doc.jobId === jobId && doc.isClientVisible)
+      .map(doc => ({
+        id: doc.id,
+        documentName: doc.documentName,
+        documentType: doc.documentType,
+        status: doc.status,
+        signedAt: doc.signedAt || undefined,
+        signedBy: doc.signedBy || undefined,
+        documentUrl: doc.documentUrl,
+      }))
+      .sort((a, b) => {
+        const aTime = a.signedAt?.getTime() || 0;
+        const bTime = b.signedAt?.getTime() || 0;
+        return bTime - aTime;
+      });
+  }
+
+  async getAllClientDocuments(): Promise<any[]> {
+    return Array.from(this.jobDocuments.values())
+      .filter(doc => doc.isClientVisible)
+      .map(doc => ({
+        id: doc.id,
+        templateId: doc.templateId,
+        clientId: doc.clientId || "client-1",
+        jobId: doc.jobId,
+        documentData: doc.documentData,
+        status: doc.status,
+        documentUrl: doc.documentUrl,
+        signedAt: doc.signedAt,
+        signedBy: doc.signedBy,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt,
+      }))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createClientDocument(document: any): Promise<any> {
+    const newDocument = {
+      ...document,
+      id: randomUUID(),
+      isClientVisible: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      documentUrl: `https://example.com/documents/${randomUUID()}.pdf`,
+    };
+    
+    this.jobDocuments.set(newDocument.id, newDocument);
+    return newDocument;
   }
 }
 
