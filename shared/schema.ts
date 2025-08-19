@@ -275,3 +275,62 @@ export type Communication = typeof communications.$inferSelect;
 export type InsertCommunication = z.infer<typeof insertCommunicationSchema>;
 export type ClientPhoto = typeof clientPhotos.$inferSelect;
 export type InsertClientPhoto = z.infer<typeof insertClientPhotoSchema>;
+
+// Purchase Order and Quote tables
+export const quotes = pgTable("quotes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").references(() => companies.id).notNull(),
+  jobId: varchar("job_id").references(() => jobs.id),
+  contractorId: varchar("contractor_id").references(() => contractors.id).notNull(),
+  quoteNumber: text("quote_number").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  validUntil: timestamp("valid_until"),
+  documentUrl: text("document_url"), // URL to uploaded quote document
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const purchaseOrders = pgTable("purchase_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poNumber: text("po_number").notNull().unique(),
+  companyId: varchar("company_id").references(() => companies.id).notNull(),
+  jobId: varchar("job_id").references(() => jobs.id),
+  contractorId: varchar("contractor_id").references(() => contractors.id).notNull(),
+  quoteId: varchar("quote_id").references(() => quotes.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("draft"), // draft, sent, accepted, rejected, completed
+  terms: text("terms"),
+  deliveryDate: timestamp("delivery_date"),
+  sentAt: timestamp("sent_at"),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const poLineItems = pgTable("po_line_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poId: varchar("po_id").references(() => purchaseOrders.id).notNull(),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+});
+
+// Insert schemas for new tables
+export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPoLineItemSchema = createInsertSchema(poLineItems).omit({ id: true });
+
+// Types for new tables
+export type Quote = typeof quotes.$inferSelect;
+export type InsertQuote = z.infer<typeof insertQuoteSchema>;
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
+export type PoLineItem = typeof poLineItems.$inferSelect;
+export type InsertPoLineItem = z.infer<typeof insertPoLineItemSchema>;

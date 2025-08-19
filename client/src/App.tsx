@@ -20,6 +20,8 @@ import Clients from "@/pages/Clients";
 import Fleet from "@/pages/Fleet";
 import Messages from "@/pages/Messages";
 import Jobs from "@/pages/Jobs";
+import PurchaseOrders from "@/pages/PurchaseOrders";
+import Quotes from "@/pages/Quotes";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
@@ -81,6 +83,9 @@ function AppContent() {
         <main className="h-full overflow-y-auto">
           <Switch>
             <Route path="/" component={Dashboard} />
+            <Route path="/jobs" component={Jobs} />
+            <Route path="/purchase-orders" component={PurchaseOrders} />
+            <Route path="/quotes" component={Quotes} />
             <Route path="/invoices" component={Invoices} />
             <Route path="/estimates" component={Estimates} />
             <Route path="/documents" component={Documents} />
@@ -89,7 +94,6 @@ function AppContent() {
             <Route path="/expenses" component={Expenses} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/clients" component={Clients} />
-            <Route path="/jobs" component={Jobs} />
             <Route path="/fleet" component={Fleet} />
             <Route path="/messages" component={Messages} />
             <Route path="/settings" component={SettingsPage} />

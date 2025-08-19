@@ -24,7 +24,13 @@ import {
   type Communication,
   type InsertCommunication,
   type ClientPhoto,
-  type InsertClientPhoto
+  type InsertClientPhoto,
+  type PurchaseOrder,
+  type InsertPurchaseOrder,
+  type Quote,
+  type InsertQuote,
+  type PoLineItem,
+  type InsertPoLineItem,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -269,6 +275,16 @@ export interface IStorage {
   getClientPhotos(clientId: string): Promise<ClientPhoto[]>;
   createClientPhoto(photo: InsertClientPhoto): Promise<ClientPhoto>;
   deleteClientPhoto(photoId: string): Promise<void>;
+
+  // Purchase Orders
+  getPurchaseOrders(): Promise<PurchaseOrder[]>;
+  createPurchaseOrder(po: InsertPurchaseOrder): Promise<PurchaseOrder>;
+  updatePurchaseOrderStatus(poId: string, status: string): Promise<PurchaseOrder>;
+
+  // Quotes
+  getQuotes(): Promise<Quote[]>;
+  createQuote(quote: InsertQuote): Promise<Quote>;
+  updateQuoteStatus(quoteId: string, status: string): Promise<Quote>;
 }
 
 export class MemStorage implements IStorage {
@@ -285,6 +301,9 @@ export class MemStorage implements IStorage {
   private clients: Map<string, Client> = new Map();
   private communications: Map<string, Communication> = new Map();
   private clientPhotos: Map<string, ClientPhoto> = new Map();
+  private purchaseOrders: Map<string, PurchaseOrder> = new Map();
+  private quotes: Map<string, Quote> = new Map();
+  private poLineItems: Map<string, PoLineItem> = new Map();
 
   constructor() {
     this.initializeMockData();
@@ -2115,6 +2134,78 @@ export class MemStorage implements IStorage {
 
   async deleteClientPhoto(photoId: string): Promise<void> {
     this.clientPhotos.delete(photoId);
+  }
+
+  // Purchase Orders Implementation
+  async getPurchaseOrders(): Promise<PurchaseOrder[]> {
+    return Array.from(this.purchaseOrders.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async createPurchaseOrder(po: InsertPurchaseOrder): Promise<PurchaseOrder> {
+    const id = randomUUID();
+    const poNumber = `PO-${Date.now()}`;
+    const newPO: PurchaseOrder = {
+      id,
+      poNumber,
+      companyId: "company-1",
+      ...po,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.purchaseOrders.set(id, newPO);
+    return newPO;
+  }
+
+  async updatePurchaseOrderStatus(poId: string, status: string): Promise<PurchaseOrder> {
+    const po = this.purchaseOrders.get(poId);
+    if (!po) {
+      throw new Error(`Purchase Order with id ${poId} not found`);
+    }
+    
+    const updatedPO: PurchaseOrder = {
+      ...po,
+      status,
+      updatedAt: new Date(),
+      ...(status === "sent" && { sentAt: new Date().toISOString() }),
+      ...(status === "accepted" && { acceptedAt: new Date().toISOString() }),
+    };
+    this.purchaseOrders.set(poId, updatedPO);
+    return updatedPO;
+  }
+
+  // Quotes Implementation
+  async getQuotes(): Promise<Quote[]> {
+    return Array.from(this.quotes.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async createQuote(quote: InsertQuote): Promise<Quote> {
+    const id = randomUUID();
+    const newQuote: Quote = {
+      id,
+      companyId: "company-1",
+      ...quote,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.quotes.set(id, newQuote);
+    return newQuote;
+  }
+
+  async updateQuoteStatus(quoteId: string, status: string): Promise<Quote> {
+    const quote = this.quotes.get(quoteId);
+    if (!quote) {
+      throw new Error(`Quote with id ${quoteId} not found`);
+    }
+    
+    const updatedQuote: Quote = {
+      ...quote,
+      status,
+      updatedAt: new Date(),
+    };
+    this.quotes.set(quoteId, updatedQuote);
+    return updatedQuote;
   }
 }
 

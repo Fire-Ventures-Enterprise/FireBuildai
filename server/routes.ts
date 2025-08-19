@@ -531,6 +531,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Purchase Orders endpoints
+  app.get("/api/purchase-orders", async (req, res) => {
+    try {
+      const purchaseOrders = await storage.getPurchaseOrders();
+      res.json(purchaseOrders);
+    } catch (error) {
+      console.error("Error fetching purchase orders:", error);
+      res.status(500).json({ message: "Failed to fetch purchase orders" });
+    }
+  });
+
+  app.post("/api/purchase-orders", async (req, res) => {
+    try {
+      const purchaseOrder = await storage.createPurchaseOrder(req.body);
+      res.json(purchaseOrder);
+    } catch (error) {
+      console.error("Error creating purchase order:", error);
+      res.status(500).json({ message: "Failed to create purchase order" });
+    }
+  });
+
+  app.put("/api/purchase-orders/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const purchaseOrder = await storage.updatePurchaseOrderStatus(id, status);
+      res.json(purchaseOrder);
+    } catch (error) {
+      console.error("Error updating purchase order status:", error);
+      res.status(500).json({ message: "Failed to update purchase order status" });
+    }
+  });
+
+  // Quotes endpoints
+  app.get("/api/quotes", async (req, res) => {
+    try {
+      const quotes = await storage.getQuotes();
+      res.json(quotes);
+    } catch (error) {
+      console.error("Error fetching quotes:", error);
+      res.status(500).json({ message: "Failed to fetch quotes" });
+    }
+  });
+
+  app.post("/api/quotes", async (req, res) => {
+    try {
+      const quote = await storage.createQuote(req.body);
+      res.json(quote);
+    } catch (error) {
+      console.error("Error creating quote:", error);
+      res.status(500).json({ message: "Failed to create quote" });
+    }
+  });
+
+  app.put("/api/quotes/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const quote = await storage.updateQuoteStatus(id, status);
+      res.json(quote);
+    } catch (error) {
+      console.error("Error updating quote status:", error);
+      res.status(500).json({ message: "Failed to update quote status" });
+    }
+  });
+
+  app.post("/api/quotes/upload", async (req, res) => {
+    try {
+      // Mock upload response for now - in real implementation would handle file upload
+      res.json({ success: true, message: "Quote document uploaded successfully" });
+    } catch (error) {
+      console.error("Error uploading quote document:", error);
+      res.status(500).json({ message: "Failed to upload quote document" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates
