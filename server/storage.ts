@@ -257,6 +257,8 @@ export interface IStorage {
   createCommunication(communication: InsertCommunication): Promise<Communication>;
   updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication>;
   deleteCommunication(id: string): Promise<void>;
+  getRecentCommunications(): Promise<Communication[]>;
+  getRecentCommunications(): Promise<Communication[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -756,9 +758,12 @@ export class MemStorage implements IStorage {
       direction: "outgoing",
       subject: "Project Update - Kitchen Renovation",
       content: "Hi Jennifer, just wanted to update you on the progress. The tile work is progressing beautifully and we're on track to finish by Friday as planned.",
+      phoneNumber: null,
       emailAddress: client1.email!,
+      duration: null,
       status: "sent",
       sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      readAt: null,
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     };
@@ -768,10 +773,14 @@ export class MemStorage implements IStorage {
       clientId: client1.id,
       type: "sms",
       direction: "incoming",
+      subject: null,
       content: "Thanks for the update! Can you send me a photo of the progress?",
       phoneNumber: client1.phone!,
+      emailAddress: null,
+      duration: null,
       status: "delivered",
       sentAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+      readAt: null,
       createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     };
@@ -781,11 +790,14 @@ export class MemStorage implements IStorage {
       clientId: client1.id,
       type: "call",
       direction: "outgoing",
+      subject: null,
       content: "Discussed final details and delivery schedule",
       phoneNumber: client1.phone!,
+      emailAddress: null,
       duration: 900, // 15 minutes
       status: "completed",
       sentAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+      readAt: null,
       createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
     };
@@ -797,9 +809,12 @@ export class MemStorage implements IStorage {
       direction: "outgoing",
       subject: "Work Complete - Bathroom Remodel",
       content: "Hi Mike and Lisa, the bathroom remodel is now complete! We'd love to get your feedback and would appreciate a review on Google.",
+      phoneNumber: null,
       emailAddress: client2.email!,
+      duration: null,
       status: "sent",
       sentAt: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+      readAt: null,
       createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
     };
@@ -809,10 +824,14 @@ export class MemStorage implements IStorage {
       clientId: client3.id,
       type: "sms",
       direction: "outgoing",
+      subject: null,
       content: "Hi Robert, just confirming our appointment tomorrow at 9 AM for the deck repair consultation.",
       phoneNumber: client3.phone!,
+      emailAddress: null,
+      duration: null,
       status: "delivered",
       sentAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+      readAt: null,
       createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
     };
@@ -2016,6 +2035,12 @@ export class MemStorage implements IStorage {
 
   async deleteCommunication(id: string): Promise<void> {
     this.communications.delete(id);
+  }
+
+  async getRecentCommunications(): Promise<Communication[]> {
+    return Array.from(this.communications.values())
+      .sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime())
+      .slice(0, 20); // Return latest 20 communications
   }
 }
 

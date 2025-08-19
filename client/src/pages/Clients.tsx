@@ -1,13 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall } from "lucide-react";
+import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall, Send } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Client {
   id: string;
@@ -79,9 +87,20 @@ interface Communication {
   updatedAt: Date;
 }
 
+const messageSchema = z.object({
+  type: z.enum(["sms", "email"]),
+  subject: z.string().optional(),
+  content: z.string().min(1, "Message content is required"),
+});
+
+type MessageFormData = z.infer<typeof messageSchema>;
+
 export default function Clients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: clients, isLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
@@ -100,6 +119,50 @@ export default function Clients() {
   const { data: clientCommunications } = useQuery<Communication[]>({
     queryKey: ["/api/clients", selectedClient?.id, "communications"],
     enabled: !!selectedClient,
+  });
+
+  const messageForm = useForm<MessageFormData>({
+    resolver: zodResolver(messageSchema),
+    defaultValues: {
+      type: "email",
+      content: "",
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (data: MessageFormData) => {
+      if (!selectedClient) throw new Error("No client selected");
+
+      const messageData = {
+        clientId: selectedClient.id,
+        type: data.type,
+        direction: "outgoing",
+        subject: data.subject,
+        content: data.content,
+        emailAddress: data.type === "email" ? selectedClient.email : undefined,
+        phoneNumber: data.type === "sms" ? selectedClient.phone : undefined,
+        status: "sent",
+        sentAt: new Date(),
+      };
+
+      return apiRequest("POST", "/api/communications", messageData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", selectedClient?.id, "communications"] });
+      messageForm.reset();
+      setShowMessageDialog(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to Send Message",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const formatCurrency = (amount: number) => {
@@ -584,6 +647,126 @@ export default function Clients() {
                       </TabsContent>
 
                       <TabsContent value="communications" className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold">Communications</h3>
+                          <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" className="gap-2">
+                                <Send className="h-4 w-4" />
+                                Send Message
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Send Message to {selectedClient?.name}</DialogTitle>
+                                <DialogDescription>
+                                  Send an SMS or email to this client
+                                </DialogDescription>
+                              </DialogHeader>
+                              
+                              <Form {...messageForm}>
+                                <form onSubmit={messageForm.handleSubmit((data) => sendMessageMutation.mutate(data))} className="space-y-4">
+                                  <FormField
+                                    control={messageForm.control}
+                                    name="type"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Message Type</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                          <FormControl>
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                          </FormControl>
+                                          <SelectContent>
+                                            <SelectItem value="email">
+                                              <div className="flex items-center gap-2">
+                                                <Mail className="h-4 w-4" />
+                                                Email
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="sms">
+                                              <div className="flex items-center gap-2">
+                                                <MessageSquare className="h-4 w-4" />
+                                                SMS
+                                              </div>
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  {messageForm.watch("type") === "email" && (
+                                    <FormField
+                                      control={messageForm.control}
+                                      name="subject"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Subject</FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="Enter email subject" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  )}
+
+                                  <FormField
+                                    control={messageForm.control}
+                                    name="content"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>
+                                          {messageForm.watch("type") === "email" ? "Email Content" : "SMS Message"}
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Textarea
+                                            placeholder={
+                                              messageForm.watch("type") === "email"
+                                                ? "Enter your email message..."
+                                                : "Enter your SMS message (160 characters max)..."
+                                            }
+                                            rows={messageForm.watch("type") === "email" ? 6 : 3}
+                                            maxLength={messageForm.watch("type") === "sms" ? 160 : undefined}
+                                            {...field}
+                                          />
+                                        </FormControl>
+                                        {messageForm.watch("type") === "sms" && (
+                                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {field.value?.length || 0}/160 characters
+                                          </p>
+                                        )}
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <div className="flex justify-end gap-2 pt-4">
+                                    <Button 
+                                      type="button" 
+                                      variant="outline" 
+                                      onClick={() => setShowMessageDialog(false)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button 
+                                      type="submit" 
+                                      disabled={sendMessageMutation.isPending}
+                                      className="gap-2"
+                                    >
+                                      <Send className="h-4 w-4" />
+                                      {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
+                                    </Button>
+                                  </div>
+                                </form>
+                              </Form>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                        
                         {clientCommunications && clientCommunications.length > 0 ? (
                           <div className="space-y-3">
                             {clientCommunications.map((comm) => (

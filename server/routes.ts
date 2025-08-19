@@ -420,6 +420,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recent communications endpoint
+  app.get("/api/communications/recent", async (req, res) => {
+    try {
+      const communications = await storage.getRecentCommunications();
+      res.json(communications);
+    } catch (error) {
+      console.error("Error fetching recent communications:", error);
+      res.status(500).json({ message: "Failed to fetch recent communications" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates
