@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LucideIcon, LayoutDashboard, FileText, MapPin, Users, Receipt, BarChart3, MessageCircle, Truck, Settings, DollarSign, Calculator } from "lucide-react";
+import { LucideIcon, LayoutDashboard, FileText, MapPin, Users, Receipt, BarChart3, MessageCircle, Truck, Settings, DollarSign, Calculator, Briefcase, MessageSquare } from "lucide-react";
 
 export interface NavigationItem {
   id: string;
@@ -10,6 +10,8 @@ export interface NavigationItem {
 
 const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: "dashboard", name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { id: "jobs", name: "Jobs", href: "/jobs", icon: Briefcase },
+  { id: "clients", name: "Client Portal", href: "/clients", icon: MessageCircle },
   { id: "invoices", name: "Invoices", href: "/invoices", icon: DollarSign },
   { id: "estimates", name: "Estimates", href: "/estimates", icon: Calculator },
   { id: "documents", name: "Documents", href: "/documents", icon: FileText },
@@ -17,7 +19,7 @@ const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: "contractors", name: "Contractors", href: "/contractors", icon: Users },
   { id: "expenses", name: "Expenses", href: "/expenses", icon: Receipt },
   { id: "analytics", name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { id: "clients", name: "Client Portal", href: "/clients", icon: MessageCircle },
+  { id: "messages", name: "Messages", href: "/messages", icon: MessageSquare },
   { id: "fleet", name: "Fleet", href: "/fleet", icon: Truck },
   { id: "settings", name: "Settings", href: "/settings", icon: Settings },
 ];

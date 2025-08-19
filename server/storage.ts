@@ -89,7 +89,11 @@ export interface IStorage {
     dueDate: string;
     totalAmount: number;
   }>>;
+  getAllJobs(): Promise<Job[]>;
+  getJob(jobId: string): Promise<Job | null>;
   createJob(job: InsertJob): Promise<Job>;
+  updateJob(jobId: string, updates: Partial<Job>): Promise<Job>;
+  deleteJob(jobId: string): Promise<void>;
 
   // Analytics
   getRevenueAnalytics(): Promise<{
@@ -1517,6 +1521,45 @@ export class MemStorage implements IStorage {
     };
     this.jobs.set(job.id, job);
     return job;
+  }
+
+  async getAllJobs(): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getJob(jobId: string): Promise<Job | null> {
+    return this.jobs.get(jobId) || null;
+  }
+
+  async updateJob(jobId: string, updates: Partial<Job>): Promise<Job> {
+    const existingJob = this.jobs.get(jobId);
+    if (!existingJob) {
+      throw new Error("Job not found");
+    }
+
+    const updatedJob: Job = {
+      ...existingJob,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.jobs.set(jobId, updatedJob);
+    return updatedJob;
+  }
+
+  async deleteJob(jobId: string): Promise<void> {
+    if (!this.jobs.has(jobId)) {
+      throw new Error("Job not found");
+    }
+    this.jobs.delete(jobId);
+  }
+
+  async deleteJobDocument(documentId: string): Promise<void> {
+    if (!this.jobDocuments.has(documentId)) {
+      throw new Error("Document not found");
+    }
+    this.jobDocuments.delete(documentId);
   }
 
   async getRevenueAnalytics() {

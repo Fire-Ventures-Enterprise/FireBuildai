@@ -19,6 +19,7 @@ import Analytics from "@/pages/Analytics";
 import Clients from "@/pages/Clients";
 import Fleet from "@/pages/Fleet";
 import Messages from "@/pages/Messages";
+import Jobs from "@/pages/Jobs";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
@@ -85,6 +86,7 @@ function AppContent() {
             <Route path="/expenses" component={Expenses} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/clients" component={Clients} />
+            <Route path="/jobs" component={Jobs} />
             <Route path="/fleet" component={Fleet} />
             <Route path="/messages" component={Messages} />
             <Route path="/settings" component={SettingsPage} />

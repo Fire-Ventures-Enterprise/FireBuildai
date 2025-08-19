@@ -66,9 +66,11 @@ export function useDeviceDetection(): DeviceInfo {
 export function isPlatformFeatureAvailable(feature: 'camera' | 'sms', deviceInfo: DeviceInfo): boolean {
   switch (feature) {
     case 'camera':
-      return deviceInfo.isMobile && deviceInfo.hasCamera;
+      // Desktop has full camera access for photo management
+      return deviceInfo.hasCamera || deviceInfo.isDesktop;
     case 'sms':
-      return deviceInfo.isMobile && deviceInfo.supportsSMS;
+      // Desktop can send SMS through web services, mobile for direct access
+      return true; // Enable SMS on all platforms for central control
     default:
       return false;
   }

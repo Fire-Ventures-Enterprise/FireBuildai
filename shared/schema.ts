@@ -57,20 +57,23 @@ export const contractors = pgTable("contractors", {
 export const jobs = pgTable("jobs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   companyId: varchar("company_id").references(() => companies.id).notNull(),
+  clientId: varchar("client_id").references(() => clients.id),
   contractorId: varchar("contractor_id").references(() => contractors.id),
   title: text("title").notNull(),
   description: text("description"),
-  clientName: text("client_name").notNull(),
-  clientAddress: text("client_address").notNull(),
-  clientPhone: text("client_phone"),
-  clientEmail: text("client_email"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0.00"),
-  status: text("status").notNull().default("planned"), // planned, in_progress, completed, cancelled
+  status: text("status").notNull().default("draft"), // draft, active, in_progress, completed, cancelled
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
   progress: integer("progress").default(0), // 0-100
   startDate: timestamp("start_date"),
   dueDate: timestamp("due_date"),
   completedDate: timestamp("completed_date"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

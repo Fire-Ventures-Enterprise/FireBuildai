@@ -90,24 +90,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create job endpoint
+  // Jobs endpoints
+  app.get("/api/jobs", async (req, res) => {
+    try {
+      const jobs = await storage.getAllJobs();
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      res.status(500).json({ message: "Failed to fetch jobs" });
+    }
+  });
+
   app.post("/api/jobs", async (req, res) => {
     try {
       const job = await storage.createJob({
         companyId: "company-1",
-        title: "New Construction Project",
-        description: "Residential construction project",
-        clientName: "New Client",
-        clientAddress: "123 New St",
-        totalAmount: "15000.00",
-        status: "planned",
-        progress: 0,
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        ...req.body,
       });
-      res.json({ success: true, jobId: job.id });
+      res.json(job);
     } catch (error) {
       console.error("Error creating job:", error);
       res.status(500).json({ message: "Failed to create job" });
+    }
+  });
+
+  app.get("/api/jobs/:id", async (req, res) => {
+    try {
+      const job = await storage.getJob(req.params.id);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      res.json(job);
+    } catch (error) {
+      console.error("Error fetching job:", error);
+      res.status(500).json({ message: "Failed to fetch job" });
+    }
+  });
+
+  app.patch("/api/jobs/:id", async (req, res) => {
+    try {
+      const job = await storage.updateJob(req.params.id, req.body);
+      res.json(job);
+    } catch (error) {
+      console.error("Error updating job:", error);
+      res.status(500).json({ message: "Failed to update job" });
+    }
+  });
+
+  app.delete("/api/jobs/:id", async (req, res) => {
+    try {
+      await storage.deleteJob(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting job:", error);
+      res.status(500).json({ message: "Failed to delete job" });
     }
   });
 
@@ -486,7 +522,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectStorageService = new ObjectStorageService();
       const objectFile = await objectStorageService.getObjectFile(req.path);
       objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error serving photo:", error);
       if (error.name === "ObjectNotFoundError") {
         return res.sendStatus(404);

@@ -5,6 +5,7 @@ FireBuild.ai is a comprehensive contractor management platform that provides rea
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+Platform Strategy: Desktop as main control hub with full functionality, mobile as companion app for field operations.
 
 # System Architecture
 

@@ -724,21 +724,12 @@ export default function Clients() {
                                                 Email
                                               </div>
                                             </SelectItem>
-                                            {isPlatformFeatureAvailable('sms', deviceInfo) ? (
-                                              <SelectItem value="sms">
-                                                <div className="flex items-center gap-2">
-                                                  <MessageSquare className="h-4 w-4" />
-                                                  SMS
-                                                </div>
-                                              </SelectItem>
-                                            ) : (
-                                              <SelectItem value="sms" disabled>
-                                                <div className="flex items-center gap-2">
-                                                  <MessageSquare className="h-4 w-4 opacity-50" />
-                                                  SMS (Mobile Only)
-                                                </div>
-                                              </SelectItem>
-                                            )}
+                                            <SelectItem value="sms">
+                                              <div className="flex items-center gap-2">
+                                                <MessageSquare className="h-4 w-4" />
+                                                SMS
+                                              </div>
+                                            </SelectItem>
                                             <SelectItem value="call">
                                               <div className="flex items-center gap-2">
                                                 <PhoneCall className="h-4 w-4" />
@@ -1078,9 +1069,10 @@ function ClientPhotos({ client }: { client: Client | null }) {
     }
   };
 
-  const CameraCapture = () => {
+  const PhotoCapture = () => {
     const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
     const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
+    const [useFileUpload, setUseFileUpload] = useState(deviceInfo.isDesktop);
 
     const startCamera = async () => {
       try {
@@ -1092,10 +1084,10 @@ function ClientPhotos({ client }: { client: Client | null }) {
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
+        setUseFileUpload(true); // Fallback to file upload
         toast({
-          title: "Camera access denied",
-          description: "Please allow camera access to take photos.",
-          variant: "destructive",
+          title: "Camera not available",
+          description: "Using file upload instead.",
         });
       }
     };
@@ -1119,6 +1111,83 @@ function ClientPhotos({ client }: { client: Client | null }) {
       }
     };
 
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setCapturedImage(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    if (useFileUpload) {
+      return (
+        <div className="space-y-4">
+          {!capturedImage ? (
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-12 text-center">
+              <div className="space-y-4">
+                <Camera className="h-12 w-12 text-gray-400 mx-auto" />
+                <div>
+                  <p className="text-lg font-medium">Upload a photo</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Choose an image file from your computer
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={() => document.getElementById('photo-upload')?.click()}
+                    className="gap-2"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Choose File
+                  </Button>
+                  {deviceInfo.hasCamera && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setUseFileUpload(false)}
+                      className="gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      Use Camera
+                    </Button>
+                  )}
+                </div>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <img src={capturedImage} alt="Selected" className="w-full rounded-lg" />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setCapturedImage(null)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Choose Different
+                </Button>
+                <Button
+                  onClick={() => uploadPhoto(capturedImage)}
+                  disabled={isUploading}
+                  className="flex-1"
+                >
+                  {isUploading ? "Saving..." : "Save Photo"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
         {!capturedImage ? (
@@ -1131,13 +1200,21 @@ function ClientPhotos({ client }: { client: Client | null }) {
               onLoadedMetadata={startCamera}
             />
             <canvas ref={setCanvasRef} className="hidden" />
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
               <Button
                 onClick={capturePhoto}
                 size="lg"
                 className="rounded-full h-16 w-16 bg-white text-black hover:bg-gray-100"
               >
                 <Camera className="h-8 w-8" />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setUseFileUpload(true)}
+                size="sm"
+                className="bg-white text-black hover:bg-gray-100"
+              >
+                Upload File
               </Button>
             </div>
           </div>
@@ -1174,20 +1251,14 @@ function ClientPhotos({ client }: { client: Client | null }) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Client Photos</h3>
-        {canTakePhotos ? (
-          <Button
-            onClick={() => setIsCameraOpen(true)}
-            className="gap-2"
-            data-testid="button-take-photo"
-          >
-            <Camera className="h-4 w-4" />
-            Take Photo
-          </Button>
-        ) : (
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            📱 Photo capture available on mobile devices only
-          </div>
-        )}
+        <Button
+          onClick={() => setIsCameraOpen(true)}
+          className="gap-2"
+          data-testid="button-take-photo"
+        >
+          <Camera className="h-4 w-4" />
+          {deviceInfo.isDesktop ? "Upload Photo" : "Take Photo"}
+        </Button>
       </div>
 
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
@@ -1198,7 +1269,7 @@ function ClientPhotos({ client }: { client: Client | null }) {
               Capture a photo for {client?.name}'s profile
             </DialogDescription>
           </DialogHeader>
-          <CameraCapture />
+          <PhotoCapture />
         </DialogContent>
       </Dialog>
 
@@ -1241,19 +1312,13 @@ function ClientPhotos({ client }: { client: Client | null }) {
           <CardContent>
             <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400 mb-4">No photos yet</p>
-            {canTakePhotos ? (
-              <Button
-                onClick={() => setIsCameraOpen(true)}
-                className="gap-2"
-              >
-                <Camera className="h-4 w-4" />
-                Take First Photo
-              </Button>
-            ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                📱 Use the mobile app to capture photos
-              </div>
-            )}
+            <Button
+              onClick={() => setIsCameraOpen(true)}
+              className="gap-2"
+            >
+              <Camera className="h-4 w-4" />
+              {deviceInfo.isDesktop ? "Upload First Photo" : "Take First Photo"}
+            </Button>
           </CardContent>
         </Card>
       )}
