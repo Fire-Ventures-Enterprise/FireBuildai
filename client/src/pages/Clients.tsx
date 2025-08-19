@@ -164,9 +164,9 @@ export default function Clients() {
       return apiRequest("POST", "/api/communications", messageData);
     },
     onSuccess: (_, variables) => {
-      const actionText = variables.type === "call" ? "Call Recorded" : "Message Sent";
+      const actionText = variables.type === "call" ? "Call Logged" : "Message Sent";
       const descriptionText = variables.type === "call" 
-        ? "Your call has been recorded successfully." 
+        ? "Your call has been logged in the client's communication history." 
         : "Your message has been sent successfully.";
       
       toast({
@@ -670,18 +670,30 @@ export default function Clients() {
                       <TabsContent value="communications" className="space-y-4">
                         <div className="flex justify-between items-center">
                           <h3 className="text-lg font-semibold">Communications</h3>
-                          <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" className="gap-2">
-                                <Send className="h-4 w-4" />
-                                Send Message
+                          <div className="flex gap-2">
+                            {selectedClient?.phone && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="gap-2"
+                                onClick={() => window.open(`tel:${selectedClient.phone}`, '_self')}
+                              >
+                                <PhoneCall className="h-4 w-4" />
+                                Call Now
                               </Button>
-                            </DialogTrigger>
+                            )}
+                            <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+                              <DialogTrigger asChild>
+                                <Button size="sm" className="gap-2">
+                                  <Send className="h-4 w-4" />
+                                  Send Message
+                                </Button>
+                              </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
                                 <DialogTitle>Send Message to {selectedClient?.name}</DialogTitle>
                                 <DialogDescription>
-                                  Send an SMS, email, or record a call with this client
+                                  Send an SMS, email, or log a completed call with this client
                                 </DialogDescription>
                               </DialogHeader>
                               
@@ -752,10 +764,14 @@ export default function Clients() {
                                             <Input
                                               type="number"
                                               placeholder="Enter call duration in minutes"
+                                              min="1"
                                               {...field}
                                               onChange={(e) => field.onChange(Number(e.target.value))}
                                             />
                                           </FormControl>
+                                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Log the duration of a completed call
+                                          </p>
                                           <FormMessage />
                                         </FormItem>
                                       )}
@@ -803,11 +819,14 @@ export default function Clients() {
                                           <FormLabel>Call Notes (Optional)</FormLabel>
                                           <FormControl>
                                             <Textarea
-                                              placeholder="Enter any notes about the call..."
+                                              placeholder="What was discussed during the call? Any follow-up actions needed?"
                                               rows={4}
                                               {...field}
                                             />
                                           </FormControl>
+                                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Document what was discussed and any next steps
+                                          </p>
                                           <FormMessage />
                                         </FormItem>
                                       )}
@@ -835,7 +854,7 @@ export default function Clients() {
                                       {sendMessageMutation.isPending 
                                         ? "Processing..." 
                                         : messageForm.watch("type") === "call" 
-                                          ? "Record Call" 
+                                          ? "Log Call" 
                                           : "Send Message"
                                       }
                                     </Button>
@@ -844,6 +863,7 @@ export default function Clients() {
                               </Form>
                             </DialogContent>
                           </Dialog>
+                          </div>
                         </div>
                         
                         {Array.isArray(clientCommunications) && clientCommunications.length > 0 ? (
