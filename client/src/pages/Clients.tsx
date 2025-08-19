@@ -16,6 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useDeviceDetection, isPlatformFeatureAvailable } from "@/hooks/useDeviceDetection";
 
 interface Client {
   id: string;
@@ -115,6 +116,7 @@ export default function Clients() {
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const deviceInfo = useDeviceDetection();
   
   const { data: clients, isLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
@@ -722,12 +724,21 @@ export default function Clients() {
                                                 Email
                                               </div>
                                             </SelectItem>
-                                            <SelectItem value="sms">
-                                              <div className="flex items-center gap-2">
-                                                <MessageSquare className="h-4 w-4" />
-                                                SMS
-                                              </div>
-                                            </SelectItem>
+                                            {isPlatformFeatureAvailable('sms', deviceInfo) ? (
+                                              <SelectItem value="sms">
+                                                <div className="flex items-center gap-2">
+                                                  <MessageSquare className="h-4 w-4" />
+                                                  SMS
+                                                </div>
+                                              </SelectItem>
+                                            ) : (
+                                              <SelectItem value="sms" disabled>
+                                                <div className="flex items-center gap-2">
+                                                  <MessageSquare className="h-4 w-4 opacity-50" />
+                                                  SMS (Mobile Only)
+                                                </div>
+                                              </SelectItem>
+                                            )}
                                             <SelectItem value="call">
                                               <div className="flex items-center gap-2">
                                                 <PhoneCall className="h-4 w-4" />
@@ -991,8 +1002,9 @@ function ClientPhotos({ client }: { client: Client | null }) {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const deviceInfo = useDeviceDetection();
 
-  const photosQuery = useQuery({
+  const photosQuery = useQuery<ClientPhoto[]>({
     queryKey: [`/api/clients/${client?.id}/photos`],
     enabled: !!client?.id,
   });
@@ -1156,18 +1168,26 @@ function ClientPhotos({ client }: { client: Client | null }) {
 
   if (!client) return null;
 
+  const canTakePhotos = isPlatformFeatureAvailable('camera', deviceInfo);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Client Photos</h3>
-        <Button
-          onClick={() => setIsCameraOpen(true)}
-          className="gap-2"
-          data-testid="button-take-photo"
-        >
-          <Camera className="h-4 w-4" />
-          Take Photo
-        </Button>
+        {canTakePhotos ? (
+          <Button
+            onClick={() => setIsCameraOpen(true)}
+            className="gap-2"
+            data-testid="button-take-photo"
+          >
+            <Camera className="h-4 w-4" />
+            Take Photo
+          </Button>
+        ) : (
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            📱 Photo capture available on mobile devices only
+          </div>
+        )}
       </div>
 
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
@@ -1221,13 +1241,19 @@ function ClientPhotos({ client }: { client: Client | null }) {
           <CardContent>
             <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400 mb-4">No photos yet</p>
-            <Button
-              onClick={() => setIsCameraOpen(true)}
-              className="gap-2"
-            >
-              <Camera className="h-4 w-4" />
-              Take First Photo
-            </Button>
+            {canTakePhotos ? (
+              <Button
+                onClick={() => setIsCameraOpen(true)}
+                className="gap-2"
+              >
+                <Camera className="h-4 w-4" />
+                Take First Photo
+              </Button>
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                📱 Use the mobile app to capture photos
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
