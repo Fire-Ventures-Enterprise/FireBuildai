@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building } from "lucide-react";
+import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall } from "lucide-react";
 import { useState, useMemo } from "react";
 
 interface Client {
@@ -62,6 +62,23 @@ interface ClientDocument {
   documentUrl: string;
 }
 
+interface Communication {
+  id: string;
+  clientId: string;
+  type: 'sms' | 'email' | 'call';
+  direction: 'incoming' | 'outgoing';
+  subject?: string;
+  content?: string;
+  phoneNumber?: string;
+  emailAddress?: string;
+  duration?: number;
+  status: string;
+  sentAt: Date;
+  readAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export default function Clients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -77,6 +94,11 @@ export default function Clients() {
 
   const { data: clientDocuments } = useQuery<ClientDocument[]>({
     queryKey: ["/api/clients", selectedClient?.id, "documents"],
+    enabled: !!selectedClient,
+  });
+
+  const { data: clientCommunications } = useQuery<Communication[]>({
+    queryKey: ["/api/clients", selectedClient?.id, "communications"],
     enabled: !!selectedClient,
   });
 
@@ -309,10 +331,14 @@ export default function Clients() {
                     </DialogHeader>
                     
                     <Tabs defaultValue="overview" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3">
+                      <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
                         <TabsTrigger value="jobs" data-testid="tab-jobs">Jobs ({client.totalJobs})</TabsTrigger>
                         <TabsTrigger value="documents" data-testid="tab-documents">Documents</TabsTrigger>
+                        <TabsTrigger value="communications" data-testid="tab-communications">
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          Communications
+                        </TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="overview" className="space-y-6">
@@ -552,6 +578,81 @@ export default function Clients() {
                             <CardContent className="p-6 text-center">
                               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                               <p className="text-gray-500 dark:text-gray-400">No documents found for this client</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="communications" className="space-y-4">
+                        {clientCommunications && clientCommunications.length > 0 ? (
+                          <div className="space-y-3">
+                            {clientCommunications.map((comm) => (
+                              <Card key={comm.id} className="p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className={`p-2 rounded-full ${
+                                    comm.type === 'email' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' :
+                                    comm.type === 'sms' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' :
+                                    'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
+                                  }`}>
+                                    {comm.type === 'email' ? <Mail className="h-4 w-4" /> :
+                                     comm.type === 'sms' ? <MessageSquare className="h-4 w-4" /> :
+                                     <PhoneCall className="h-4 w-4" />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                          comm.direction === 'outgoing' 
+                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                                        }`}>
+                                          {comm.direction === 'outgoing' ? '→ Outgoing' : '← Incoming'}
+                                        </span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                          {comm.type.toUpperCase()}
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        {formatDate(comm.sentAt)}
+                                      </div>
+                                    </div>
+                                    
+                                    {comm.subject && (
+                                      <h4 className="font-medium text-gray-900 dark:text-white mt-1">
+                                        {comm.subject}
+                                      </h4>
+                                    )}
+                                    
+                                    {comm.content && (
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        {comm.content}
+                                      </p>
+                                    )}
+                                    
+                                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                      {comm.type === 'email' && comm.emailAddress && (
+                                        <span>To: {comm.emailAddress}</span>
+                                      )}
+                                      {(comm.type === 'sms' || comm.type === 'call') && comm.phoneNumber && (
+                                        <span>Phone: {comm.phoneNumber}</span>
+                                      )}
+                                      {comm.type === 'call' && comm.duration && (
+                                        <span>Duration: {Math.floor(comm.duration / 60)}:{(comm.duration % 60).toString().padStart(2, '0')}</span>
+                                      )}
+                                      <span className={`px-2 py-1 rounded-full ${getStatusColor(comm.status)}`}>
+                                        {comm.status}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <Card className="text-center py-12">
+                            <CardContent>
+                              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-500 dark:text-gray-400">No communications found for this client</p>
                             </CardContent>
                           </Card>
                         )}

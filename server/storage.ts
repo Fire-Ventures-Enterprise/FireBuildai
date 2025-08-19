@@ -20,7 +20,9 @@ import {
   type CompanySettings,
   type InsertCompanySettings,
   type Client,
-  type InsertClient
+  type InsertClient,
+  type Communication,
+  type InsertCommunication
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -249,6 +251,12 @@ export interface IStorage {
     signedAt?: Date;
     documentUrl: string;
   }>>;
+
+  // Communications
+  getClientCommunications(clientId: string): Promise<Communication[]>;
+  createCommunication(communication: InsertCommunication): Promise<Communication>;
+  updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication>;
+  deleteCommunication(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -263,6 +271,7 @@ export class MemStorage implements IStorage {
   private jobDocuments: Map<string, JobDocument> = new Map();
   private companySettings: Map<string, CompanySettings> = new Map();
   private clients: Map<string, Client> = new Map();
+  private communications: Map<string, Communication> = new Map();
 
   constructor() {
     this.initializeMockData();
@@ -738,6 +747,81 @@ export class MemStorage implements IStorage {
     this.clients.set(client2.id, client2);
     this.clients.set(client3.id, client3);
     this.clients.set(client4.id, client4);
+
+    // Initialize communications
+    const comm1: Communication = {
+      id: randomUUID(),
+      clientId: client1.id,
+      type: "email",
+      direction: "outgoing",
+      subject: "Project Update - Kitchen Renovation",
+      content: "Hi Jennifer, just wanted to update you on the progress. The tile work is progressing beautifully and we're on track to finish by Friday as planned.",
+      emailAddress: client1.email!,
+      status: "sent",
+      sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    };
+
+    const comm2: Communication = {
+      id: randomUUID(),
+      clientId: client1.id,
+      type: "sms",
+      direction: "incoming",
+      content: "Thanks for the update! Can you send me a photo of the progress?",
+      phoneNumber: client1.phone!,
+      status: "delivered",
+      sentAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    };
+
+    const comm3: Communication = {
+      id: randomUUID(),
+      clientId: client1.id,
+      type: "call",
+      direction: "outgoing",
+      content: "Discussed final details and delivery schedule",
+      phoneNumber: client1.phone!,
+      duration: 900, // 15 minutes
+      status: "completed",
+      sentAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+      createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+    };
+
+    const comm4: Communication = {
+      id: randomUUID(),
+      clientId: client2.id,
+      type: "email",
+      direction: "outgoing",
+      subject: "Work Complete - Bathroom Remodel",
+      content: "Hi Mike and Lisa, the bathroom remodel is now complete! We'd love to get your feedback and would appreciate a review on Google.",
+      emailAddress: client2.email!,
+      status: "sent",
+      sentAt: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+      createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+    };
+
+    const comm5: Communication = {
+      id: randomUUID(),
+      clientId: client3.id,
+      type: "sms",
+      direction: "outgoing",
+      content: "Hi Robert, just confirming our appointment tomorrow at 9 AM for the deck repair consultation.",
+      phoneNumber: client3.phone!,
+      status: "delivered",
+      sentAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+      createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+    };
+
+    this.communications.set(comm1.id, comm1);
+    this.communications.set(comm2.id, comm2);
+    this.communications.set(comm3.id, comm3);
+    this.communications.set(comm4.id, comm4);
+    this.communications.set(comm5.id, comm5);
 
     // Update job data to reference clients
     job1.clientName = client1.name;
@@ -1893,6 +1977,45 @@ export class MemStorage implements IStorage {
         documentUrl: doc.documentUrl,
       };
     });
+  }
+
+  // Communication methods
+  async getClientCommunications(clientId: string): Promise<Communication[]> {
+    return Array.from(this.communications.values())
+      .filter(comm => comm.clientId === clientId)
+      .sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime());
+  }
+
+  async createCommunication(communication: InsertCommunication): Promise<Communication> {
+    const id = randomUUID();
+    const newCommunication: Communication = {
+      id,
+      ...communication,
+      sentAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.communications.set(id, newCommunication);
+    return newCommunication;
+  }
+
+  async updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication> {
+    const communication = this.communications.get(id);
+    if (!communication) {
+      throw new Error(`Communication with id ${id} not found`);
+    }
+    
+    const updatedCommunication: Communication = {
+      ...communication,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.communications.set(id, updatedCommunication);
+    return updatedCommunication;
+  }
+
+  async deleteCommunication(id: string): Promise<void> {
+    this.communications.delete(id);
   }
 }
 

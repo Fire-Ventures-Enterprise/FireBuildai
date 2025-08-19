@@ -194,6 +194,23 @@ export const jobDocuments = pgTable("job_documents", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const communications = pgTable("communications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").references(() => clients.id).notNull(),
+  type: text("type").notNull(), // 'sms', 'email', 'call'
+  direction: text("direction").notNull(), // 'incoming', 'outgoing'
+  subject: text("subject"), // For emails
+  content: text("content"),
+  phoneNumber: text("phone_number"), // For SMS/calls
+  emailAddress: text("email_address"), // For emails
+  duration: integer("duration"), // Call duration in seconds
+  status: text("status").notNull().default("sent"), // 'sent', 'delivered', 'failed', 'read'
+  sentAt: timestamp("sent_at").defaultNow(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
 export const insertCompanySchema = createInsertSchema(companies).omit({ id: true, createdAt: true, updatedAt: true });
@@ -208,6 +225,7 @@ export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates
 export const insertJobDocumentSchema = createInsertSchema(jobDocuments).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCompanySettingsSchema = createInsertSchema(companySettings).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCommunicationSchema = createInsertSchema(communications).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -236,3 +254,5 @@ export type CompanySettings = typeof companySettings.$inferSelect;
 export type InsertCompanySettings = z.infer<typeof insertCompanySettingsSchema>;
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
+export type Communication = typeof communications.$inferSelect;
+export type InsertCommunication = z.infer<typeof insertCommunicationSchema>;

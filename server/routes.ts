@@ -379,6 +379,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Communication endpoints
+  app.get("/api/clients/:id/communications", async (req, res) => {
+    try {
+      const communications = await storage.getClientCommunications(req.params.id);
+      res.json(communications);
+    } catch (error) {
+      console.error("Error fetching client communications:", error);
+      res.status(500).json({ message: "Failed to fetch communications" });
+    }
+  });
+
+  app.post("/api/communications", async (req, res) => {
+    try {
+      const communication = await storage.createCommunication(req.body);
+      res.status(201).json(communication);
+    } catch (error) {
+      console.error("Error creating communication:", error);
+      res.status(500).json({ message: "Failed to create communication" });
+    }
+  });
+
+  app.put("/api/communications/:id", async (req, res) => {
+    try {
+      const communication = await storage.updateCommunication(req.params.id, req.body);
+      res.json(communication);
+    } catch (error) {
+      console.error("Error updating communication:", error);
+      res.status(500).json({ message: "Failed to update communication" });
+    }
+  });
+
+  app.delete("/api/communications/:id", async (req, res) => {
+    try {
+      await storage.deleteCommunication(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting communication:", error);
+      res.status(500).json({ message: "Failed to delete communication" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates
