@@ -1,5 +1,7 @@
 import { Bell, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import logoLight from "@/assets/logo-light.jpg";
+import logoDark from "@/assets/logo-dark.jpg";
 
 export default function Header() {
   const [location] = useLocation();
@@ -13,13 +15,13 @@ export default function Header() {
           <Link href="/">
             <div className="flex items-center space-x-4 cursor-pointer" data-testid="header-logo">
               <img 
-                src="/images/logo-light.jpg"
+                src={logoLight}
                 alt="FireBuild.ai" 
                 className="h-10 w-auto dark:hidden"
                 data-testid="header-logo-light"
               />
               <img 
-                src="/images/logo-dark.jpg"
+                src={logoDark}
                 alt="FireBuild.ai" 
                 className="h-10 w-auto hidden dark:block"
                 data-testid="header-logo-dark"

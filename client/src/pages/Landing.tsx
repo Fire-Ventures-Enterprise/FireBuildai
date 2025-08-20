@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import logoLight from "@/assets/logo-light.jpg";
+import logoDark from "@/assets/logo-dark.jpg";
 import { 
   Play, 
   CheckCircle, 
@@ -86,13 +88,13 @@ export default function Landing() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
-              src="/attached_assets/1_1755652872023.jpg" 
+              src={logoLight}
               alt="FireBuild.ai" 
               className="h-8 w-auto dark:hidden"
               data-testid="landing-header-logo-light"
             />
             <img 
-              src="/attached_assets/3_1755652955031.jpg" 
+              src={logoDark}
               alt="FireBuild.ai" 
               className="h-8 w-auto hidden dark:block"
               data-testid="landing-header-logo-dark"
@@ -363,7 +365,7 @@ export default function Landing() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <img 
-                  src="/attached_assets/3_1755652955031.jpg" 
+                  src={logoDark} 
                   alt="FireBuild.ai" 
                   className="h-8 w-auto"
                   data-testid="footer-logo"
