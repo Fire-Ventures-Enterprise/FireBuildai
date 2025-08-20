@@ -35,32 +35,38 @@ export default function Landing() {
     {
       icon: MapPin,
       title: "Real-Time GPS Tracking",
-      description: "Monitor your contractors' locations with live GPS tracking and automated check-ins."
+      description: "Monitor your contractors' locations with live GPS tracking and automated check-ins.",
+      route: "/tracking"
     },
     {
       icon: FileText,
       title: "Purchase Order System",
-      description: "Create and manage POs for contractors with integrated quote management."
+      description: "Create and manage POs for contractors with integrated quote management.",
+      route: "/purchase-orders"
     },
     {
       icon: DollarSign,
       title: "Automated Payments",
-      description: "Process payments efficiently with integrated Stripe payment processing."
+      description: "Process payments efficiently with integrated Stripe payment processing.",
+      route: "/invoices"
     },
     {
       icon: MessageSquare,
       title: "Client Communication",
-      description: "Streamlined communication portal with automated review requests."
+      description: "Streamlined communication portal with automated review requests.",
+      route: "/messages"
     },
     {
       icon: BarChart3,
       title: "Business Analytics",
-      description: "Comprehensive dashboard with performance metrics and insights."
+      description: "Comprehensive dashboard with performance metrics and insights.",
+      route: "/analytics"
     },
     {
       icon: Truck,
       title: "Fleet Management",
-      description: "Track vehicles, maintenance schedules, and optimize routes."
+      description: "Track vehicles, maintenance schedules, and optimize routes.",
+      route: "/fleet"
     }
   ];
 
@@ -98,10 +104,16 @@ export default function Landing() {
             <Button variant="ghost" onClick={() => setLocation("/demo")} data-testid="nav-demo">
               Demo
             </Button>
-            <Button variant="ghost" data-testid="nav-features">
+            <Button variant="ghost" onClick={() => {
+              const featuresSection = document.getElementById('features');
+              featuresSection?.scrollIntoView({ behavior: 'smooth' });
+            }} data-testid="nav-features">
               Features
             </Button>
-            <Button variant="ghost" data-testid="nav-pricing">
+            <Button variant="ghost" onClick={() => {
+              const pricingSection = document.getElementById('pricing');
+              pricingSection?.scrollIntoView({ behavior: 'smooth' });
+            }} data-testid="nav-pricing">
               Pricing
             </Button>
             <Button 
@@ -208,7 +220,7 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section id="features" className="py-20 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -224,17 +236,25 @@ export default function Landing() {
             {features.map((feature, index) => {
               const IconComponent = feature.icon;
               return (
-                <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-200">
+                <Card 
+                  key={index} 
+                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group"
+                  onClick={() => setLocation(feature.route)}
+                  data-testid={`feature-card-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}
+                >
                   <CardHeader>
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                       <IconComponent className="h-6 w-6 text-white" />
                     </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardTitle className="text-xl group-hover:text-blue-600 transition-colors">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="text-base">
                       {feature.description}
                     </CardDescription>
+                    <div className="mt-4 text-sm text-blue-600 group-hover:text-blue-700 font-medium">
+                      Learn more →
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -308,6 +328,117 @@ export default function Landing() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start free and scale as you grow. No hidden fees, no long-term contracts.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Starter Plan */}
+            <Card className="relative">
+              <CardHeader>
+                <CardTitle className="text-xl">Starter</CardTitle>
+                <div className="text-3xl font-bold">Free</div>
+                <CardDescription>Perfect for getting started</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Up to 5 contractors</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Basic GPS tracking</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Essential reporting</span>
+                  </div>
+                </div>
+                <Button className="w-full" onClick={() => {
+                  setAuthMode("signup");
+                  setIsAuthOpen(true);
+                }} data-testid="pricing-starter">Get Started Free</Button>
+              </CardContent>
+            </Card>
+
+            {/* Professional Plan */}
+            <Card className="relative border-2 border-blue-500">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-blue-500">Most Popular</Badge>
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl">Professional</CardTitle>
+                <div className="text-3xl font-bold">$49<span className="text-lg font-normal">/month</span></div>
+                <CardDescription>For growing businesses</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Up to 25 contractors</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Advanced GPS & tracking</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Payment processing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Client portal</span>
+                  </div>
+                </div>
+                <Button className="w-full" onClick={() => {
+                  setAuthMode("signup");
+                  setIsAuthOpen(true);
+                }} data-testid="pricing-professional">Start Free Trial</Button>
+              </CardContent>
+            </Card>
+
+            {/* Enterprise Plan */}
+            <Card className="relative">
+              <CardHeader>
+                <CardTitle className="text-xl">Enterprise</CardTitle>
+                <div className="text-3xl font-bold">$149<span className="text-lg font-normal">/month</span></div>
+                <CardDescription>For large operations</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Unlimited contractors</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">All features included</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Priority support</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Custom integrations</span>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full" data-testid="pricing-enterprise">Contact Sales</Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
