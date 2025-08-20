@@ -11,19 +11,19 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-fire-dark/90 border-b border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24">
           <Link href="/">
             <div className="flex items-center space-x-4 cursor-pointer" data-testid="header-logo">
               <img 
                 src={logoLight}
                 alt="FireBuild.ai" 
-                className="h-16 w-auto dark:hidden"
+                className="h-20 w-auto dark:hidden"
                 data-testid="header-logo-light"
               />
               <img 
                 src={logoDark}
                 alt="FireBuild.ai" 
-                className="h-16 w-auto hidden dark:block"
+                className="h-20 w-auto hidden dark:block"
                 data-testid="header-logo-dark"
               />
               <div>
