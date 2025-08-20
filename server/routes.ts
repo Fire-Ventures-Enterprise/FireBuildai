@@ -7,6 +7,7 @@ import { hashPassword, verifyPassword, generateSessionToken, validatePassword, v
 import { insertUserSchema, insertUserSessionSchema } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
+import Stripe from "stripe";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Metrics endpoint
@@ -1182,6 +1183,315 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error marking payment as paid:", error);
       res.status(500).json({ message: "Failed to mark payment as paid" });
+    }
+  });
+
+  // Initialize Stripe
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2023-10-16",
+  });
+
+  // Stripe payment routes
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const { amount, currency = "usd", invoiceId } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ error: "Valid amount is required" });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency,
+        metadata: {
+          invoiceId: invoiceId || "",
+        },
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Stripe payment intent error:", error);
+      res.status(500).json({ error: "Failed to create payment intent: " + error.message });
+    }
+  });
+
+  // Stripe webhook for payment confirmations
+  app.post("/api/stripe-webhook", async (req, res) => {
+    try {
+      const event = req.body;
+      
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        const invoiceId = paymentIntent.metadata.invoiceId;
+        
+        if (invoiceId) {
+          // Mark invoice as paid
+          await storage.updateContractorInvoice(invoiceId, {
+            status: "paid",
+            paidDate: new Date(),
+          });
+        }
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Stripe webhook error:", error);
+      res.status(400).json({ error: "Webhook processing failed" });
+    }
+  });
+
+  // PayPal routes
+  app.get("/paypal/setup", async (req, res) => {
+    try {
+      const { loadPaypalDefault } = await import("./paypal");
+      await loadPaypalDefault(req, res);
+    } catch (error) {
+      console.error("PayPal setup error:", error);
+      res.status(500).json({ error: "PayPal setup failed" });
+    }
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    try {
+      const { createPaypalOrder } = await import("./paypal");
+      await createPaypalOrder(req, res);
+    } catch (error) {
+      console.error("PayPal order creation error:", error);
+      res.status(500).json({ error: "PayPal order creation failed" });
+    }
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    try {
+      const { capturePaypalOrder } = await import("./paypal");
+      await capturePaypalOrder(req, res);
+    } catch (error) {
+      console.error("PayPal capture error:", error);
+      res.status(500).json({ error: "PayPal capture failed" });
+    }
+  });
+
+  // Invoice generation endpoint
+  app.post("/api/invoices/generate", async (req, res) => {
+    try {
+      const { 
+        clientId, 
+        jobId, 
+        items, 
+        dueDate, 
+        paymentTerms = "net30",
+        notes 
+      } = req.body;
+
+      // Generate invoice number
+      const invoiceNumber = `INV-${Date.now()}`;
+      
+      // Calculate total
+      const total = items.reduce((sum: number, item: any) => {
+        return sum + (item.quantity * item.rate);
+      }, 0);
+
+      // Create invoice record
+      const invoice = {
+        invoiceNumber,
+        clientId,
+        jobId,
+        totalAmount: total.toString(),
+        dueDate: new Date(dueDate),
+        paymentTerms,
+        status: "sent",
+        notes,
+        items: JSON.stringify(items),
+      };
+
+      const createdInvoice = await storage.createInvoice(invoice);
+      
+      res.status(201).json({
+        invoice: createdInvoice,
+        paymentUrl: `/payment/${createdInvoice.id}`,
+      });
+    } catch (error) {
+      console.error("Invoice generation error:", error);
+      res.status(500).json({ error: "Failed to generate invoice" });
+    }
+  });
+
+  // Get invoice for payment
+  app.get("/api/invoices/:id/payment", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ error: "Invoice not found" });
+      }
+      
+      res.json({
+        id: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        totalAmount: invoice.totalAmount,
+        status: invoice.status,
+        dueDate: invoice.dueDate,
+        client: invoice.client,
+      });
+    } catch (error) {
+      console.error("Error fetching invoice for payment:", error);
+      res.status(500).json({ error: "Failed to fetch invoice" });
+    }
+  });
+
+  // Invoice API routes
+  app.get("/api/invoices", async (req, res) => {
+    try {
+      const invoices = await storage.getInvoices();
+      res.json(invoices);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  app.get("/api/invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error fetching invoice:", error);
+      res.status(500).json({ message: "Failed to fetch invoice" });
+    }
+  });
+
+  app.get("/api/invoices/:id/payment", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      // Return invoice data for payment processing
+      res.json({
+        id: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        totalAmount: invoice.totalAmount,
+        dueDate: invoice.dueDate,
+        status: invoice.status,
+        description: invoice.description,
+        client: invoice.client,
+        paidDate: invoice.paidDate
+      });
+    } catch (error) {
+      console.error("Error fetching invoice for payment:", error);
+      res.status(500).json({ message: "Failed to fetch invoice" });
+    }
+  });
+
+  app.post("/api/invoices", async (req, res) => {
+    try {
+      const invoice = await storage.createInvoice({
+        id: randomUUID(),
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      res.status(500).json({ message: "Failed to create invoice" });
+    }
+  });
+
+  app.patch("/api/invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.updateInvoice(req.params.id, req.body);
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      res.status(500).json({ message: "Failed to update invoice" });
+    }
+  });
+
+  app.delete("/api/invoices/:id", async (req, res) => {
+    try {
+      await storage.deleteInvoice(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      res.status(500).json({ message: "Failed to delete invoice" });
+    }
+  });
+
+  app.post("/api/invoices/:id/send", async (req, res) => {
+    try {
+      const invoice = await storage.updateInvoice(req.params.id, { 
+        status: "sent",
+        sentDate: new Date()
+      });
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error sending invoice:", error);
+      res.status(500).json({ message: "Failed to send invoice" });
+    }
+  });
+
+  // Stripe payment integration (using existing stripe instance)
+
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const { amount, invoiceId } = req.body;
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          invoiceId: invoiceId || "manual-payment"
+        }
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // PayPal payment integration
+  app.get("/paypal/setup", async (req, res) => {
+    const { loadPaypalDefault } = await import("./paypal");
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    const { createPaypalOrder } = await import("./paypal");
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    const { capturePaypalOrder } = await import("./paypal");
+    await capturePaypalOrder(req, res);
+  });
+
+  // Payment success webhook handler
+  app.post("/api/payment/success", async (req, res) => {
+    try {
+      const { invoiceId, paymentMethod, paymentId } = req.body;
+      
+      if (invoiceId) {
+        await storage.updateInvoice(invoiceId, {
+          status: "paid",
+          paidDate: new Date(),
+          paymentMethod: paymentMethod,
+          paymentId: paymentId
+        });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error processing payment success:", error);
+      res.status(500).json({ message: "Failed to process payment" });
     }
   });
 

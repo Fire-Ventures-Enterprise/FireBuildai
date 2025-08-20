@@ -371,6 +371,13 @@ export interface IStorage {
   getOverduePayments(): Promise<ApPaymentCalendar[]>;
   updateApPaymentEntry(id: string, updates: Partial<InsertApPaymentCalendar>): Promise<ApPaymentCalendar>;
   markPaymentPaid(id: string, paymentDate: Date): Promise<ApPaymentCalendar>;
+
+  // Invoice methods for Stripe/PayPal payments
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  getInvoice(id: string): Promise<Invoice | undefined>;
+  updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice>;
+  getInvoices(): Promise<Invoice[]>;
+  deleteInvoice(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1644,6 +1651,50 @@ export class DatabaseStorage implements IStorage {
       .where(eq(apPaymentCalendar.id, id))
       .returning();
     return updated;
+  }
+
+  // Invoice methods for Stripe/PayPal payments
+  async createInvoice(invoice: any): Promise<any> {
+    const [newInvoice] = await db.insert(invoices)
+      .values(invoice)
+      .returning();
+    return newInvoice;
+  }
+
+  async getInvoice(id: string): Promise<any | undefined> {
+    const [invoice] = await db.select()
+      .from(invoices)
+      .leftJoin(clients, eq(invoices.clientId, clients.id))
+      .leftJoin(jobs, eq(invoices.jobId, jobs.id))
+      .where(eq(invoices.id, id));
+    
+    if (!invoice) return undefined;
+    
+    return {
+      ...invoice.invoices,
+      client: invoice.clients,
+      job: invoice.jobs,
+    };
+  }
+
+  async updateInvoice(id: string, invoice: any): Promise<any> {
+    const [updated] = await db.update(invoices)
+      .set({ ...invoice, updatedAt: new Date() })
+      .where(eq(invoices.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getInvoices(): Promise<any[]> {
+    return await db.select()
+      .from(invoices)
+      .leftJoin(clients, eq(invoices.clientId, clients.id))
+      .leftJoin(jobs, eq(invoices.jobId, jobs.id))
+      .orderBy(desc(invoices.createdAt));
+  }
+
+  async deleteInvoice(id: string): Promise<void> {
+    await db.delete(invoices).where(eq(invoices.id, id));
   }
 }
 

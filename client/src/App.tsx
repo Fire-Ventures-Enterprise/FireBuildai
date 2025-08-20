@@ -29,6 +29,8 @@ import SettingsPage from "@/pages/Settings";
 import Verification from "@/pages/Verification";
 import Register from "@/pages/Register";
 import Login from "@/pages/Login";
+import Checkout from "@/pages/Checkout";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/not-found";
 
 function AppLayout() {
@@ -123,6 +125,10 @@ function AppContent() {
       <Route path="/login" component={Login} />
       <Route path="/verification" component={Verification} />
       <Route path="/verify" component={Verification} />
+      
+      {/* Payment routes - Full page without sidebar */}
+      <Route path="/checkout/:invoiceId" component={Checkout} />
+      <Route path="/payment/success" component={PaymentSuccess} />
       
       {/* Main Application - With sidebar */}
       <Route path="/dashboard" component={AppLayout} />

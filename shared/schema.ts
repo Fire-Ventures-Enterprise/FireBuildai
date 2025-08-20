@@ -405,11 +405,32 @@ export const poLineItems = pgTable("po_line_items", {
   notes: text("notes"),
 });
 
+// Client Invoices table for Stripe/PayPal payments
+export const invoices = pgTable("invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceNumber: varchar("invoice_number").notNull().unique(),
+  clientId: varchar("client_id").references(() => clients.id),
+  jobId: varchar("job_id").references(() => jobs.id),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status").default("pending"), // pending, paid, overdue, cancelled
+  paymentMethod: varchar("payment_method"), // stripe, paypal
+  paymentIntentId: varchar("payment_intent_id"), // Stripe payment intent ID
+  paypalOrderId: varchar("paypal_order_id"), // PayPal order ID
+  dueDate: timestamp("due_date"),
+  paidDate: timestamp("paid_date"),
+  paymentTerms: varchar("payment_terms").default("net30"),
+  notes: text("notes"),
+  items: text("items"), // JSON string of invoice items
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for new tables
 export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPoLineItemSchema = createInsertSchema(poLineItems).omit({ id: true });
 export const insertVerificationCodeSchema = createInsertSchema(verificationCodes).omit({ id: true, createdAt: true });
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true, updatedAt: true });
 
 export type Quote = typeof quotes.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;
@@ -419,3 +440,5 @@ export type PoLineItem = typeof poLineItems.$inferSelect;
 export type InsertPoLineItem = z.infer<typeof insertPoLineItemSchema>;
 export type VerificationCode = typeof verificationCodes.$inferSelect;
 export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
