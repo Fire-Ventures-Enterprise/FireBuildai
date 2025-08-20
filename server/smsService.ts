@@ -1,26 +1,34 @@
-// SMS Service for sending verification codes
-// Note: This is a placeholder for SMS functionality
-// For production use, integrate with services like Twilio, AWS SNS, or similar
+import twilio from 'twilio';
+
+// Initialize Twilio client
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const fromPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+if (!accountSid || !authToken || !fromPhoneNumber) {
+  console.warn('Twilio credentials not found. SMS functionality will be disabled.');
+}
+
+const twilioClient = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
 export async function sendSMS(phone: string, message: string): Promise<boolean> {
   try {
-    // For development, we'll just log the SMS instead of actually sending it
-    console.log(`SMS would be sent to ${phone}: ${message}`);
-    
-    // In production, you would implement actual SMS sending here:
-    /*
-    const twilioClient = require('twilio')(accountSid, authToken);
-    
-    await twilioClient.messages.create({
+    if (!twilioClient || !fromPhoneNumber) {
+      console.error('Twilio not configured. Cannot send SMS.');
+      return false;
+    }
+
+    // Send actual SMS via Twilio
+    const messageResponse = await twilioClient.messages.create({
       body: message,
-      from: '+1234567890', // Your Twilio phone number
+      from: fromPhoneNumber,
       to: phone
     });
-    */
-    
+
+    console.log(`SMS sent successfully to ${phone}. Message SID: ${messageResponse.sid}`);
     return true;
   } catch (error) {
-    console.error('SMS service error:', error);
+    console.error('Twilio SMS error:', error);
     return false;
   }
 }

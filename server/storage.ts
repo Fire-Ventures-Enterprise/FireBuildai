@@ -33,6 +33,10 @@ import {
   type InsertPoLineItem,
   type VerificationCode,
   type InsertVerificationCode,
+  type User,
+  type InsertUser,
+  type UserSession,
+  type InsertUserSession,
   contractors,
   jobs,
   payments,
@@ -50,6 +54,8 @@ import {
   quotes,
   poLineItems,
   verificationCodes,
+  users,
+  userSessions,
   companies,
 } from "@shared/schema";
 import { db } from "./db";
@@ -312,10 +318,38 @@ export interface IStorage {
   createVerificationCode(verificationCode: InsertVerificationCode): Promise<VerificationCode>;
   getValidVerificationCode(email: string | null, phone: string | null, code: string, type: 'email' | 'sms', purpose: 'registration' | 'password_reset'): Promise<VerificationCode | null>;
   markVerificationCodeAsUsed(id: string): Promise<void>;
-  getUserByEmail(email: string): Promise<any>;
   markEmailAsVerified(email: string): Promise<void>;
   markPhoneAsVerified(phone: string): Promise<void>;
   activateUser(userId: string): Promise<void>;
+
+  // User Authentication & Management
+  getUserByEmail(email: string): Promise<User | null>;
+  getUserByUsername(username: string): Promise<User | null>;
+  getUserById(id: string): Promise<User | null>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
+  updateUserLastLogin(id: string): Promise<void>;
+
+  // User Session Management
+  createUserSession(session: InsertUserSession): Promise<UserSession>;
+  getUserSession(sessionToken: string): Promise<UserSession | null>;
+  deleteUserSession(sessionToken: string): Promise<void>;
+  deleteAllUserSessions(userId: string): Promise<void>;
+
+  // User Management
+  createUser(user: InsertUser): Promise<User>;
+  getUserById(userId: string): Promise<User | null>;
+  getUserByUsername(username: string): Promise<User | null>;
+  updateUser(userId: string, updates: Partial<User>): Promise<User>;
+  updateUserVerificationStatus(userId: string, emailVerified?: boolean, phoneVerified?: boolean): Promise<void>;
+  updateUserLastLogin(userId: string): Promise<void>;
+
+  // Session Management
+  createUserSession(session: InsertUserSession): Promise<UserSession>;
+  getUserSession(sessionToken: string): Promise<UserSession | null>;
+  deleteUserSession(sessionToken: string): Promise<void>;
+  deleteExpiredSessions(): Promise<void>;
+  deleteAllUserSessions(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1389,28 +1423,101 @@ export class DatabaseStorage implements IStorage {
       .where(eq(verificationCodes.id, id));
   }
 
-  async getUserByEmail(email: string): Promise<any> {
-    // For now, return a placeholder since we don't have users table implemented yet
-    // This will need to be updated when user authentication is fully implemented
-    return null;
+  async getUserByEmail(email: string): Promise<User | null> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || null;
   }
 
   async markEmailAsVerified(email: string): Promise<void> {
-    // Placeholder for marking email as verified
-    // This will need to be implemented when user table is added
-    console.log(`Email ${email} marked as verified`);
+    await db.update(users)
+      .set({ emailVerified: true, updatedAt: new Date() })
+      .where(eq(users.email, email));
   }
 
   async markPhoneAsVerified(phone: string): Promise<void> {
-    // Placeholder for marking phone as verified  
-    // This will need to be implemented when user table is added
-    console.log(`Phone ${phone} marked as verified`);
+    await db.update(users)
+      .set({ phoneVerified: true, updatedAt: new Date() })
+      .where(eq(users.phone, phone));
   }
 
   async activateUser(userId: string): Promise<void> {
-    // Placeholder for activating user account
-    // This will need to be implemented when user table is added
-    console.log(`User ${userId} account activated`);
+    await db.update(users)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  // User Management Methods
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values({
+      ...user,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return newUser;
+  }
+
+  async getUserById(userId: string): Promise<User | null> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    return user || null;
+  }
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || null;
+  }
+
+  async updateUser(userId: string, updates: Partial<User>): Promise<User> {
+    const [updatedUser] = await db.update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserVerificationStatus(userId: string, emailVerified?: boolean, phoneVerified?: boolean): Promise<void> {
+    const updateData: any = { updatedAt: new Date() };
+    if (emailVerified !== undefined) updateData.emailVerified = emailVerified;
+    if (phoneVerified !== undefined) updateData.phoneVerified = phoneVerified;
+    
+    await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, userId));
+  }
+
+  async updateUserLastLogin(userId: string): Promise<void> {
+    await db.update(users)
+      .set({ lastLoginAt: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  // Session Management Methods
+  async createUserSession(session: InsertUserSession): Promise<UserSession> {
+    const [newSession] = await db.insert(userSessions).values({
+      ...session,
+      createdAt: new Date()
+    }).returning();
+    return newSession;
+  }
+
+  async getUserSession(sessionToken: string): Promise<UserSession | null> {
+    const [session] = await db.select().from(userSessions)
+      .where(and(
+        eq(userSessions.sessionToken, sessionToken),
+        sql`${userSessions.expiresAt} > NOW()`
+      ));
+    return session || null;
+  }
+
+  async deleteUserSession(sessionToken: string): Promise<void> {
+    await db.delete(userSessions).where(eq(userSessions.sessionToken, sessionToken));
+  }
+
+  async deleteExpiredSessions(): Promise<void> {
+    await db.delete(userSessions).where(sql`${userSessions.expiresAt} <= NOW()`);
+  }
+
+  async deleteAllUserSessions(userId: string): Promise<void> {
+    await db.delete(userSessions).where(eq(userSessions.userId, userId));
   }
 }
 
