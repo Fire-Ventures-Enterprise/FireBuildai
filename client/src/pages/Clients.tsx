@@ -108,12 +108,27 @@ const messageSchema = z.object({
   path: ["content"], // This will show the error on the content field
 });
 
+const clientSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  secondaryPhone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  preferredContactMethod: z.enum(["email", "phone", "sms"]),
+  notes: z.string().optional(),
+});
+
 type MessageFormData = z.infer<typeof messageSchema>;
+type ClientFormData = z.infer<typeof clientSchema>;
 
 export default function Clients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [showAddClientDialog, setShowAddClientDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const deviceInfo = useDeviceDetection();
@@ -143,6 +158,22 @@ export default function Clients() {
       type: "email",
       content: "",
       duration: 0,
+    },
+  });
+
+  const clientForm = useForm<ClientFormData>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      secondaryPhone: "",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      preferredContactMethod: "email",
+      notes: "",
     },
   });
 
@@ -183,6 +214,28 @@ export default function Clients() {
       toast({
         title: "Failed to Send Message",
         description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createClientMutation = useMutation({
+    mutationFn: async (data: ClientFormData) => {
+      return apiRequest("POST", "/api/clients", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Client Added",
+        description: "New client has been added successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      setShowAddClientDialog(false);
+      clientForm.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add client. Please try again.",
         variant: "destructive",
       });
     },
@@ -271,7 +324,11 @@ export default function Clients() {
             Manage your client relationships and communications
           </p>
         </div>
-        <Button data-testid="button-add-client" className="gap-2">
+        <Button 
+          data-testid="button-add-client" 
+          className="gap-2"
+          onClick={() => setShowAddClientDialog(true)}
+        >
           <Plus className="h-4 w-4" />
           Add Client
         </Button>
@@ -968,13 +1025,208 @@ export default function Clients() {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Start building relationships by adding your first client
             </p>
-            <Button data-testid="button-add-first-client" className="gap-2">
+            <Button 
+              data-testid="button-add-first-client" 
+              className="gap-2"
+              onClick={() => setShowAddClientDialog(true)}
+            >
               <Plus className="h-4 w-4" />
               Add Your First Client
             </Button>
           </CardContent>
         </Card>
       )}
+
+      {/* Add Client Dialog */}
+      <Dialog open={showAddClientDialog} onOpenChange={setShowAddClientDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Client</DialogTitle>
+            <DialogDescription>
+              Enter the client's information to add them to your database
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...clientForm}>
+            <form onSubmit={clientForm.handleSubmit((data) => createClientMutation.mutate(data))} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={clientForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Client name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={clientForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="client@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={clientForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={clientForm.control}
+                  name="secondaryPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Secondary Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 987-6543" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={clientForm.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="123 Main Street" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={clientForm.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input placeholder="City" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={clientForm.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input placeholder="State" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={clientForm.control}
+                  name="zipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ZIP Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="12345" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={clientForm.control}
+                name="preferredContactMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Contact Method</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="phone">Phone</SelectItem>
+                        <SelectItem value="sms">SMS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={clientForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Additional notes about the client..."
+                        rows={3}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowAddClientDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createClientMutation.isPending}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  {createClientMutation.isPending ? "Adding..." : "Add Client"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
