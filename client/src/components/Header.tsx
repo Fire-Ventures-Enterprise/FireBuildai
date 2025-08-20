@@ -1,7 +1,7 @@
 import { Bell, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import logoLight from "@assets/1_1755652872023.jpg";
-import logoDark from "@assets/3_1755652955031.jpg";
+import logoLight from "../assets/logo-light.jpg";
+import logoDark from "../assets/logo-dark.jpg";
 
 export default function Header() {
   const [location] = useLocation();

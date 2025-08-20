@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigationOrder } from "@/hooks/useNavigationOrder";
 import { Button } from "@/components/ui/button";
+import logoLight from "../assets/logo-light.jpg";
+import logoDark from "../assets/logo-dark.jpg";
 import {
   DndContext,
   closestCenter,
@@ -114,13 +116,13 @@ export default function Navigation() {
       <div className="flex items-center justify-between h-16 px-6 border-b border-border">
         <div className="flex items-center">
           <img 
-            src="/attached_assets/1_1755652872023.jpg" 
+            src={logoLight}
             alt="FireBuild.ai" 
             className="h-8 w-auto dark:hidden"
             data-testid="navigation-logo-light"
           />
           <img 
-            src="/attached_assets/3_1755652955031.jpg" 
+            src={logoDark}
             alt="FireBuild.ai" 
             className="h-8 w-auto hidden dark:block"
             data-testid="navigation-logo-dark"
