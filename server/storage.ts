@@ -1155,6 +1155,88 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(clients.createdAt));
   }
 
+  async getAllClients(): Promise<Array<{
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    secondaryPhone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    totalSpent: number;
+    rating: number;
+    isActive: boolean;
+    lastContactDate?: Date;
+    tags?: string[];
+    preferredContactMethod: string;
+    notes?: string;
+    jobsCount: number;
+    totalJobs: number;
+    completedJobs: number;
+    activeJobs: number;
+    lastJobDate?: Date;
+    createdAt: Date;
+  }>> {
+    // Get all clients with aggregated data
+    const clientsWithStats = await db
+      .select({
+        id: clients.id,
+        name: clients.name,
+        email: clients.email,
+        phone: clients.phone,
+        secondaryPhone: clients.secondaryPhone,
+        address: clients.address,
+        city: clients.city,
+        state: clients.state,
+        zipCode: clients.zipCode,
+        rating: clients.rating,
+        isActive: clients.isActive,
+        lastContactDate: clients.lastContactDate,
+        tags: clients.tags,
+        preferredContactMethod: clients.preferredContactMethod,
+        notes: clients.notes,
+        createdAt: clients.createdAt,
+        totalJobs: count(jobs.id),
+        totalSpent: sum(jobs.totalAmount),
+      })
+      .from(clients)
+      .leftJoin(jobs, eq(clients.id, jobs.clientId))
+      .where(eq(clients.companyId, this.defaultCompanyId))
+      .groupBy(clients.id, clients.name, clients.email, clients.phone, clients.secondaryPhone, 
+               clients.address, clients.city, clients.state, clients.zipCode, clients.rating, 
+               clients.isActive, clients.lastContactDate, clients.tags, clients.preferredContactMethod, 
+               clients.notes, clients.createdAt)
+      .orderBy(desc(clients.createdAt));
+
+    // Transform the results to match the expected interface
+    return clientsWithStats.map(client => ({
+      id: client.id,
+      name: client.name,
+      email: client.email || undefined,
+      phone: client.phone || undefined,
+      secondaryPhone: client.secondaryPhone || undefined,
+      address: client.address || undefined,
+      city: client.city || undefined,
+      state: client.state || undefined,
+      zipCode: client.zipCode || undefined,
+      totalSpent: Number(client.totalSpent) || 0,
+      rating: client.rating || 0,
+      isActive: client.isActive || true,
+      lastContactDate: client.lastContactDate || undefined,
+      tags: client.tags || [],
+      preferredContactMethod: client.preferredContactMethod || 'email',
+      notes: client.notes || undefined,
+      jobsCount: Number(client.totalJobs) || 0,
+      totalJobs: Number(client.totalJobs) || 0,
+      completedJobs: 0, // Will calculate separately if needed
+      activeJobs: 0, // Will calculate separately if needed
+      lastJobDate: undefined, // Will calculate separately if needed
+      createdAt: client.createdAt
+    }));
+  }
+
   async getClient(clientId: string): Promise<Client | null> {
     const [client] = await db
       .select()
@@ -1186,7 +1268,162 @@ export class DatabaseStorage implements IStorage {
     await db.delete(clients).where(eq(clients.id, clientId));
   }
 
-  // Client Projects
+  async searchClients(query: string): Promise<Array<{
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    secondaryPhone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    totalSpent: number;
+    rating: number;
+    isActive: boolean;
+    lastContactDate?: Date;
+    tags?: string[];
+    preferredContactMethod: string;
+    notes?: string;
+    jobsCount: number;
+    totalJobs: number;
+    completedJobs: number;
+    activeJobs: number;
+    lastJobDate?: Date;
+    createdAt: Date;
+  }>> {
+    // Search clients with aggregated data
+    const clientsWithStats = await db
+      .select({
+        id: clients.id,
+        name: clients.name,
+        email: clients.email,
+        phone: clients.phone,
+        secondaryPhone: clients.secondaryPhone,
+        address: clients.address,
+        city: clients.city,
+        state: clients.state,
+        zipCode: clients.zipCode,
+        rating: clients.rating,
+        isActive: clients.isActive,
+        lastContactDate: clients.lastContactDate,
+        tags: clients.tags,
+        preferredContactMethod: clients.preferredContactMethod,
+        notes: clients.notes,
+        createdAt: clients.createdAt,
+        totalJobs: count(jobs.id),
+        totalSpent: sum(jobs.totalAmount),
+      })
+      .from(clients)
+      .leftJoin(jobs, eq(clients.id, jobs.clientId))
+      .where(and(
+        eq(clients.companyId, this.defaultCompanyId),
+        or(
+          like(clients.name, `%${query}%`),
+          like(clients.email, `%${query}%`),
+          like(clients.phone, `%${query}%`),
+          like(clients.city, `%${query}%`)
+        )
+      ))
+      .groupBy(clients.id, clients.name, clients.email, clients.phone, clients.secondaryPhone, 
+               clients.address, clients.city, clients.state, clients.zipCode, clients.rating, 
+               clients.isActive, clients.lastContactDate, clients.tags, clients.preferredContactMethod, 
+               clients.notes, clients.createdAt)
+      .orderBy(desc(clients.createdAt));
+
+    // Transform the results to match the expected interface
+    return clientsWithStats.map(client => ({
+      id: client.id,
+      name: client.name,
+      email: client.email || undefined,
+      phone: client.phone || undefined,
+      secondaryPhone: client.secondaryPhone || undefined,
+      address: client.address || undefined,
+      city: client.city || undefined,
+      state: client.state || undefined,
+      zipCode: client.zipCode || undefined,
+      totalSpent: Number(client.totalSpent) || 0,
+      rating: client.rating || 0,
+      isActive: client.isActive || true,
+      lastContactDate: client.lastContactDate || undefined,
+      tags: client.tags || [],
+      preferredContactMethod: client.preferredContactMethod || 'email',
+      notes: client.notes || undefined,
+      jobsCount: Number(client.totalJobs) || 0,
+      totalJobs: Number(client.totalJobs) || 0,
+      completedJobs: 0, // Will calculate separately if needed
+      activeJobs: 0, // Will calculate separately if needed
+      lastJobDate: undefined, // Will calculate separately if needed
+      createdAt: client.createdAt
+    }));
+  }
+
+  // Client Projects/Jobs
+  async getClientJobs(clientId: string): Promise<Array<{
+    id: string;
+    title: string;
+    description?: string;
+    totalAmount: number;
+    paidAmount: number;
+    status: string;
+    progress: number;
+    startDate?: Date;
+    dueDate?: Date;
+    completedDate?: Date;
+    contractorName?: string;
+    createdAt: Date;
+  }>> {
+    const projects = await db
+      .select({
+        id: jobs.id,
+        title: jobs.title,
+        description: jobs.description,
+        status: jobs.status,
+        progress: jobs.progress,
+        totalAmount: jobs.totalAmount,
+        paidAmount: jobs.paidAmount,
+        startDate: jobs.startDate,
+        dueDate: jobs.dueDate,
+        completedDate: jobs.completedDate,
+        contractorId: jobs.contractorId,
+        createdAt: jobs.createdAt
+      })
+      .from(jobs)
+      .where(and(
+        eq(jobs.clientId, clientId),
+        eq(jobs.companyId, this.defaultCompanyId)
+      ))
+      .orderBy(desc(jobs.createdAt));
+
+    // Get contractor names
+    const projectsWithContractors = await Promise.all(
+      projects.map(async (project) => {
+        const [contractor] = await db
+          .select({ name: contractors.name })
+          .from(contractors)
+          .where(eq(contractors.id, project.contractorId))
+          .limit(1);
+
+        return {
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          totalAmount: parseFloat(project.totalAmount || '0'),
+          paidAmount: parseFloat(project.paidAmount || '0'),
+          status: project.status,
+          progress: project.progress || 0,
+          startDate: project.startDate,
+          dueDate: project.dueDate,
+          completedDate: project.completedDate,
+          contractorName: contractor?.name,
+          createdAt: project.createdAt
+        };
+      })
+    );
+
+    return projectsWithContractors;
+  }
+
   async getClientProjects(clientId: string): Promise<Array<{
     id: string;
     title: string;
