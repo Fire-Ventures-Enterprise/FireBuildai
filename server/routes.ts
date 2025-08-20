@@ -1068,6 +1068,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Contractor Invoices (AP) API routes
+  app.get("/api/contractor-invoices", async (req, res) => {
+    try {
+      const invoices = await storage.getContractorInvoices();
+      res.json(invoices);
+    } catch (error) {
+      console.error("Error fetching contractor invoices:", error);
+      res.status(500).json({ message: "Failed to fetch contractor invoices" });
+    }
+  });
+
+  app.post("/api/contractor-invoices", async (req, res) => {
+    try {
+      const invoice = await storage.createContractorInvoice(req.body);
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error("Error creating contractor invoice:", error);
+      res.status(500).json({ message: "Failed to create contractor invoice" });
+    }
+  });
+
+  app.get("/api/contractor-invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.getContractorInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ message: "Contractor invoice not found" });
+      }
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error fetching contractor invoice:", error);
+      res.status(500).json({ message: "Failed to fetch contractor invoice" });
+    }
+  });
+
+  app.put("/api/contractor-invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.updateContractorInvoice(req.params.id, req.body);
+      res.json(invoice);
+    } catch (error) {
+      console.error("Error updating contractor invoice:", error);
+      res.status(500).json({ message: "Failed to update contractor invoice" });
+    }
+  });
+
+  app.delete("/api/contractor-invoices/:id", async (req, res) => {
+    try {
+      await storage.deleteContractorInvoice(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting contractor invoice:", error);
+      res.status(500).json({ message: "Failed to delete contractor invoice" });
+    }
+  });
+
+  // AP Payment Calendar API routes
+  app.get("/api/ap-calendar", async (req, res) => {
+    try {
+      const calendar = await storage.getApPaymentCalendar();
+      res.json(calendar);
+    } catch (error) {
+      console.error("Error fetching AP payment calendar:", error);
+      res.status(500).json({ message: "Failed to fetch AP payment calendar" });
+    }
+  });
+
+  app.get("/api/ap-calendar/upcoming", async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const upcomingPayments = await storage.getUpcomingPayments(days);
+      res.json(upcomingPayments);
+    } catch (error) {
+      console.error("Error fetching upcoming payments:", error);
+      res.status(500).json({ message: "Failed to fetch upcoming payments" });
+    }
+  });
+
+  app.get("/api/ap-calendar/overdue", async (req, res) => {
+    try {
+      const overduePayments = await storage.getOverduePayments();
+      res.json(overduePayments);
+    } catch (error) {
+      console.error("Error fetching overdue payments:", error);
+      res.status(500).json({ message: "Failed to fetch overdue payments" });
+    }
+  });
+
+  app.post("/api/ap-calendar", async (req, res) => {
+    try {
+      const entry = await storage.createApPaymentEntry(req.body);
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating AP payment entry:", error);
+      res.status(500).json({ message: "Failed to create AP payment entry" });
+    }
+  });
+
+  app.put("/api/ap-calendar/:id", async (req, res) => {
+    try {
+      const entry = await storage.updateApPaymentEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating AP payment entry:", error);
+      res.status(500).json({ message: "Failed to update AP payment entry" });
+    }
+  });
+
+  app.put("/api/ap-calendar/:id/mark-paid", async (req, res) => {
+    try {
+      const { paymentDate } = req.body;
+      const entry = await storage.markPaymentPaid(req.params.id, new Date(paymentDate));
+      res.json(entry);
+    } catch (error) {
+      console.error("Error marking payment as paid:", error);
+      res.status(500).json({ message: "Failed to mark payment as paid" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time updates

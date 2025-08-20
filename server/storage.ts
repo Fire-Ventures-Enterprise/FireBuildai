@@ -37,6 +37,10 @@ import {
   type InsertUser,
   type UserSession,
   type InsertUserSession,
+  type ContractorInvoice,
+  type InsertContractorInvoice,
+  type ApPaymentCalendar,
+  type InsertApPaymentCalendar,
   contractors,
   jobs,
   payments,
@@ -57,6 +61,8 @@ import {
   users,
   userSessions,
   companies,
+  contractorInvoices,
+  apPaymentCalendar,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, like, or, and } from "drizzle-orm";
@@ -350,6 +356,21 @@ export interface IStorage {
   deleteUserSession(sessionToken: string): Promise<void>;
   deleteExpiredSessions(): Promise<void>;
   deleteAllUserSessions(userId: string): Promise<void>;
+
+  // Contractor Invoices (AP)
+  createContractorInvoice(invoice: InsertContractorInvoice): Promise<ContractorInvoice>;
+  getContractorInvoices(): Promise<ContractorInvoice[]>;
+  getContractorInvoice(id: string): Promise<ContractorInvoice | undefined>;
+  updateContractorInvoice(id: string, updates: Partial<InsertContractorInvoice>): Promise<ContractorInvoice>;
+  deleteContractorInvoice(id: string): Promise<void>;
+
+  // AP Payment Calendar
+  createApPaymentEntry(entry: InsertApPaymentCalendar): Promise<ApPaymentCalendar>;
+  getApPaymentCalendar(): Promise<ApPaymentCalendar[]>;
+  getUpcomingPayments(days?: number): Promise<ApPaymentCalendar[]>;
+  getOverduePayments(): Promise<ApPaymentCalendar[]>;
+  updateApPaymentEntry(id: string, updates: Partial<InsertApPaymentCalendar>): Promise<ApPaymentCalendar>;
+  markPaymentPaid(id: string, paymentDate: Date): Promise<ApPaymentCalendar>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1518,6 +1539,111 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAllUserSessions(userId: string): Promise<void> {
     await db.delete(userSessions).where(eq(userSessions.userId, userId));
+  }
+
+  // Contractor Invoices (AP) Implementation
+  async createContractorInvoice(invoice: InsertContractorInvoice): Promise<ContractorInvoice> {
+    const [newInvoice] = await db.insert(contractorInvoices).values(invoice).returning();
+    
+    // Automatically create payment calendar entry based on payment terms
+    if (newInvoice.paymentTerms && newInvoice.totalAmount) {
+      const daysToAdd = parseInt(newInvoice.paymentTerms.replace('net', '')) || 30;
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + daysToAdd);
+
+      await this.createApPaymentEntry({
+        invoiceId: newInvoice.id,
+        contractorId: newInvoice.contractorId!,
+        dueDate,
+        amount: newInvoice.totalAmount,
+        paymentTerms: newInvoice.paymentTerms,
+        status: 'upcoming'
+      });
+    }
+    
+    return newInvoice;
+  }
+
+  async getContractorInvoices(): Promise<ContractorInvoice[]> {
+    return await db.select().from(contractorInvoices).orderBy(desc(contractorInvoices.createdAt));
+  }
+
+  async getContractorInvoice(id: string): Promise<ContractorInvoice | undefined> {
+    const [invoice] = await db.select().from(contractorInvoices).where(eq(contractorInvoices.id, id));
+    return invoice;
+  }
+
+  async updateContractorInvoice(id: string, updates: Partial<InsertContractorInvoice>): Promise<ContractorInvoice> {
+    const [updated] = await db.update(contractorInvoices)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractorInvoices.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteContractorInvoice(id: string): Promise<void> {
+    await db.delete(contractorInvoices).where(eq(contractorInvoices.id, id));
+    // Also delete related payment calendar entries
+    await db.delete(apPaymentCalendar).where(eq(apPaymentCalendar.invoiceId, id));
+  }
+
+  // AP Payment Calendar Implementation
+  async createApPaymentEntry(entry: InsertApPaymentCalendar): Promise<ApPaymentCalendar> {
+    const [newEntry] = await db.insert(apPaymentCalendar).values(entry).returning();
+    return newEntry;
+  }
+
+  async getApPaymentCalendar(): Promise<ApPaymentCalendar[]> {
+    return await db.select().from(apPaymentCalendar).orderBy(apPaymentCalendar.dueDate);
+  }
+
+  async getUpcomingPayments(days: number = 30): Promise<ApPaymentCalendar[]> {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + days);
+    
+    return await db.select()
+      .from(apPaymentCalendar)
+      .where(
+        and(
+          eq(apPaymentCalendar.status, 'upcoming'),
+          sql`${apPaymentCalendar.dueDate} <= ${futureDate.toISOString()}`
+        )
+      )
+      .orderBy(apPaymentCalendar.dueDate);
+  }
+
+  async getOverduePayments(): Promise<ApPaymentCalendar[]> {
+    const today = new Date();
+    
+    return await db.select()
+      .from(apPaymentCalendar)
+      .where(
+        and(
+          or(eq(apPaymentCalendar.status, 'due'), eq(apPaymentCalendar.status, 'overdue')),
+          sql`${apPaymentCalendar.dueDate} < ${today.toISOString()}`
+        )
+      )
+      .orderBy(apPaymentCalendar.dueDate);
+  }
+
+  async updateApPaymentEntry(id: string, updates: Partial<InsertApPaymentCalendar>): Promise<ApPaymentCalendar> {
+    const [updated] = await db.update(apPaymentCalendar)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(apPaymentCalendar.id, id))
+      .returning();
+    return updated;
+  }
+
+  async markPaymentPaid(id: string, paymentDate: Date): Promise<ApPaymentCalendar> {
+    const [updated] = await db.update(apPaymentCalendar)
+      .set({ 
+        status: 'paid',
+        actualPayDate: paymentDate,
+        updatedAt: new Date()
+      })
+      .where(eq(apPaymentCalendar.id, id))
+      .returning();
+    return updated;
   }
 }
 

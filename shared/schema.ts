@@ -278,93 +278,7 @@ export const insertClientSchema = createInsertSchema(clients).omit({ id: true, c
 export const insertCommunicationSchema = createInsertSchema(communications).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertClientPhotoSchema = createInsertSchema(clientPhotos).omit({ id: true, createdAt: true });
 
-// Types
-export type User = typeof users.$inferSelect;
-
-// Purchase Orders Table
-export const purchaseOrders = pgTable("purchase_orders", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  poNumber: varchar("po_number").notNull().unique(),
-  contractorId: varchar("contractor_id").references(() => contractors.id),
-  jobId: varchar("job_id").references(() => jobs.id),
-  quoteId: varchar("quote_id").references(() => quotes.id),
-  description: text("description"),
-  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
-  status: varchar("status").default("pending"), // pending, approved, completed, cancelled
-  terms: varchar("terms").default("net30"), // net15, net30, net60, etc
-  dueDate: timestamp("due_date"),
-  approvedBy: varchar("approved_by").references(() => users.id),
-  approvedAt: timestamp("approved_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Contractors Table
-export const contractors = pgTable("contractors", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  companyName: varchar("company_name").notNull(),
-  contactName: varchar("contact_name"),
-  email: varchar("email"),
-  phone: varchar("phone"),
-  address: text("address"),
-  taxId: varchar("tax_id"),
-  specialty: varchar("specialty"), // plumbing, electrical, roofing, etc
-  isActive: boolean("is_active").default(true),
-  paymentTerms: varchar("payment_terms").default("net30"),
-  hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Jobs Table
-export const jobs = pgTable("jobs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  jobNumber: varchar("job_number").notNull().unique(),
-  title: varchar("title").notNull(),
-  description: text("description"),
-  clientId: varchar("client_id").references(() => clients.id),
-  address: text("address"),
-  status: varchar("status").default("planning"), // planning, active, completed, cancelled
-  startDate: timestamp("start_date"),
-  endDate: timestamp("end_date"),
-  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
-  actualCost: decimal("actual_cost", { precision: 10, scale: 2 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Clients Table
-export const clients = pgTable("clients", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  companyName: varchar("company_name"),
-  contactName: varchar("contact_name").notNull(),
-  email: varchar("email"),
-  phone: varchar("phone"),
-  address: text("address"),
-  isActive: boolean("is_active").default(true),
-  paymentTerms: varchar("payment_terms").default("net30"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Quotes Table
-export const quotes = pgTable("quotes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  quoteNumber: varchar("quote_number").notNull().unique(),
-  jobId: varchar("job_id").references(() => jobs.id),
-  contractorId: varchar("contractor_id").references(() => contractors.id),
-  description: text("description"),
-  laborCost: decimal("labor_cost", { precision: 10, scale: 2 }),
-  materialCost: decimal("material_cost", { precision: 10, scale: 2 }),
-  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
-  validUntil: timestamp("valid_until"),
-  status: varchar("status").default("pending"), // pending, approved, rejected, expired
-  attachments: text("attachments").array(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Contractor Invoices (AR - Accounts Receivable from contractors)
+// Contractor Invoices (AP - Accounts Payable to contractors)
 export const contractorInvoices = pgTable("contractor_invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   invoiceNumber: varchar("invoice_number").notNull().unique(),
@@ -375,7 +289,8 @@ export const contractorInvoices = pgTable("contractor_invoices", {
   laborRate: decimal("labor_rate", { precision: 8, scale: 2 }),
   materialCost: decimal("material_cost", { precision: 10, scale: 2 }),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
-  paymentTerms: varchar("payment_terms").default("net30"),
+  paymentTerms: varchar("payment_terms").default("net30"), // net15, net30, net45, net60
+  invoiceDate: timestamp("invoice_date").defaultNow(),
   dueDate: timestamp("due_date"),
   paidDate: timestamp("paid_date"),
   status: varchar("status").default("pending"), // pending, paid, overdue, disputed
@@ -384,32 +299,34 @@ export const contractorInvoices = pgTable("contractor_invoices", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Payment Schedule Calendar
-export const paymentSchedule = pgTable("payment_schedule", {
+// AP Payment Calendar - Separate calendar for contractor payment scheduling
+export const apPaymentCalendar = pgTable("ap_payment_calendar", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   invoiceId: varchar("invoice_id").references(() => contractorInvoices.id),
   contractorId: varchar("contractor_id").references(() => contractors.id),
   dueDate: timestamp("due_date").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentTerms: varchar("payment_terms").notNull(), // net15, net30, net45, net60
   status: varchar("status").default("upcoming"), // upcoming, due, paid, overdue
   reminderSent: boolean("reminder_sent").default(false),
+  paymentMethod: varchar("payment_method"), // check, ach, wire, card
+  scheduledPayDate: timestamp("scheduled_pay_date"),
+  actualPayDate: timestamp("actual_pay_date"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
-export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
-export type Contractor = typeof contractors.$inferSelect;
-export type InsertContractor = typeof contractors.$inferInsert;
-export type Job = typeof jobs.$inferSelect;
-export type InsertJob = typeof jobs.$inferInsert;
-export type Client = typeof clients.$inferSelect;
-export type InsertClient = typeof clients.$inferInsert;
-export type Quote = typeof quotes.$inferSelect;
-export type InsertQuote = typeof quotes.$inferInsert;
+// Insert schemas for new tables
+export const insertContractorInvoiceSchema = createInsertSchema(contractorInvoices).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertApPaymentCalendarSchema = createInsertSchema(apPaymentCalendar).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Types
+export type User = typeof users.$inferSelect;
 export type ContractorInvoice = typeof contractorInvoices.$inferSelect;
 export type InsertContractorInvoice = typeof contractorInvoices.$inferInsert;
-export type PaymentSchedule = typeof paymentSchedule.$inferSelect;
-export type InsertPaymentSchedule = typeof paymentSchedule.$inferInsert;
+export type ApPaymentCalendar = typeof apPaymentCalendar.$inferSelect;
+export type InsertApPaymentCalendar = typeof apPaymentCalendar.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
@@ -493,6 +410,7 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, cre
 export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPoLineItemSchema = createInsertSchema(poLineItems).omit({ id: true });
 export const insertVerificationCodeSchema = createInsertSchema(verificationCodes).omit({ id: true, createdAt: true });
+
 export type Quote = typeof quotes.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;
 export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
