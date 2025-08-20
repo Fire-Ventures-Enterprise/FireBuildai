@@ -90,13 +90,13 @@ export default function Landing() {
             <img 
               src={logoLight}
               alt="FireBuild.ai" 
-              className="h-8 w-auto dark:hidden"
+              className="h-12 w-auto dark:hidden"
               data-testid="landing-header-logo-light"
             />
             <img 
               src={logoDark}
               alt="FireBuild.ai" 
-              className="h-8 w-auto hidden dark:block"
+              className="h-12 w-auto hidden dark:block"
               data-testid="landing-header-logo-dark"
             />
           </div>
@@ -367,7 +367,7 @@ export default function Landing() {
                 <img 
                   src={logoDark} 
                   alt="FireBuild.ai" 
-                  className="h-8 w-auto"
+                  className="h-12 w-auto"
                   data-testid="footer-logo"
                 />
               </div>
