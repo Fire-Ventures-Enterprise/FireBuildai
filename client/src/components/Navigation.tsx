@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigationOrder } from "@/hooks/useNavigationOrder";
 import { Button } from "@/components/ui/button";
-import logoLight from "../assets/logo-light.jpg";
-import logoDark from "../assets/logo-dark.jpg";
+import logoLight from "@assets/1_1755652872023.jpg";
+import logoDark from "@assets/3_1755652955031.jpg";
 import {
   DndContext,
   closestCenter,
