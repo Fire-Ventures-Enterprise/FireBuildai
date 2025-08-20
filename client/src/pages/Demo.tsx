@@ -16,8 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import logoLight from "@assets/1_1755652872023.jpg";
-import logoDark from "@assets/3_1755652955031.jpg";
+// Demo page imports
 
 export default function Demo() {
   const [, setLocation] = useLocation();
@@ -87,13 +86,13 @@ export default function Demo() {
           
           <div className="flex items-center gap-2">
             <img 
-              src={logoLight}
+              src="/images/logo-light.jpg"
               alt="FireBuild.ai" 
               className="h-8 w-auto dark:hidden"
               data-testid="demo-logo-light"
             />
             <img 
-              src={logoDark}
+              src="/images/logo-dark.jpg"
               alt="FireBuild.ai" 
               className="h-8 w-auto hidden dark:block"
               data-testid="demo-logo-dark"
