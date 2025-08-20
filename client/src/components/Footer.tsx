@@ -1,4 +1,4 @@
-import { Flame } from "lucide-react";
+// Footer component
 
 export default function Footer() {
   return (
@@ -7,10 +7,16 @@ export default function Footer() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4" data-testid="footer-brand">
             <img 
+              src="/attached_assets/1_1755652872023.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto dark:hidden"
+              data-testid="footer-logo-light"
+            />
+            <img 
               src="/attached_assets/3_1755652955031.jpg" 
               alt="FireBuild.ai" 
-              className="h-8 w-auto"
-              data-testid="footer-logo-image"
+              className="h-8 w-auto hidden dark:block"
+              data-testid="footer-logo-dark"
             />
             <div>
               <p className="text-xs text-gray-400">© 2024 All rights reserved</p>
