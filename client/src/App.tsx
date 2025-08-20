@@ -84,7 +84,18 @@ function AppLayout() {
             <Menu className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold">FireBuild.ai</span>
+            <img 
+              src="/attached_assets/1_1755652872023.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto dark:hidden"
+              data-testid="header-logo-light"
+            />
+            <img 
+              src="/attached_assets/3_1755652955031.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto hidden dark:block"
+              data-testid="header-logo-dark"
+            />
           </div>
         </div>
 

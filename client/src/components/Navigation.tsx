@@ -113,10 +113,18 @@ export default function Navigation() {
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-border">
         <div className="flex items-center">
-          <Building2 className="h-8 w-8 text-primary" />
-          <span className="ml-2 text-xl font-bold fire-logo">
-            FireBuild.ai
-          </span>
+          <img 
+            src="/attached_assets/1_1755652872023.jpg" 
+            alt="FireBuild.ai" 
+            className="h-8 w-auto dark:hidden"
+            data-testid="navigation-logo-light"
+          />
+          <img 
+            src="/attached_assets/3_1755652955031.jpg" 
+            alt="FireBuild.ai" 
+            className="h-8 w-auto hidden dark:block"
+            data-testid="navigation-logo-dark"
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button

@@ -84,10 +84,19 @@ export default function Demo() {
           </Button>
           
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FB</span>
-            </div>
-            <span className="text-xl font-bold text-foreground">FireBuild.ai Demo</span>
+            <img 
+              src="/attached_assets/1_1755652872023.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto dark:hidden"
+              data-testid="demo-logo-light"
+            />
+            <img 
+              src="/attached_assets/3_1755652955031.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto hidden dark:block"
+              data-testid="demo-logo-dark"
+            />
+            <span className="text-xl font-bold text-foreground">Demo</span>
           </div>
           
           <Button onClick={() => setLocation("/")} data-testid="try-full-app">

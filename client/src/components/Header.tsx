@@ -12,13 +12,13 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <Link href="/">
             <div className="flex items-center space-x-4 cursor-pointer" data-testid="header-logo">
-              <div className="w-10 h-10 fire-gradient rounded-xl flex items-center justify-center">
-                <Flame className="text-white text-xl" />
-              </div>
+              <img 
+                src="/attached_assets/3_1755652955031.jpg" 
+                alt="FireBuild.ai" 
+                className="h-10 w-auto"
+                data-testid="header-logo-image"
+              />
               <div>
-                <h1 className="text-2xl font-bold fire-logo">
-                  FireBuild.ai
-                </h1>
                 <p className="text-sm text-gray-400">Contractor Management Platform</p>
               </div>
             </div>

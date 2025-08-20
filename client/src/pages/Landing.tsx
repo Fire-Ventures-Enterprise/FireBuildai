@@ -85,10 +85,18 @@ export default function Landing() {
       <header className="border-b bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FB</span>
-            </div>
-            <span className="text-xl font-bold text-foreground">FireBuild.ai</span>
+            <img 
+              src="/attached_assets/1_1755652872023.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto dark:hidden"
+              data-testid="landing-header-logo-light"
+            />
+            <img 
+              src="/attached_assets/3_1755652955031.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto hidden dark:block"
+              data-testid="landing-header-logo-dark"
+            />
           </div>
           
           <nav className="hidden md:flex items-center gap-6">
@@ -354,10 +362,12 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">FB</span>
-                </div>
-                <span className="text-xl font-bold">FireBuild.ai</span>
+                <img 
+                  src="/attached_assets/3_1755652955031.jpg" 
+                  alt="FireBuild.ai" 
+                  className="h-8 w-auto"
+                  data-testid="footer-logo"
+                />
               </div>
               <p className="text-gray-400">
                 The complete contractor management platform for modern construction businesses.

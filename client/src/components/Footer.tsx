@@ -6,11 +6,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4" data-testid="footer-brand">
-            <div className="w-8 h-8 fire-gradient rounded-lg flex items-center justify-center">
-              <Flame className="text-white w-4 h-4" />
-            </div>
+            <img 
+              src="/attached_assets/3_1755652955031.jpg" 
+              alt="FireBuild.ai" 
+              className="h-8 w-auto"
+              data-testid="footer-logo-image"
+            />
             <div>
-              <p className="font-semibold text-white">FireBuild.ai</p>
               <p className="text-xs text-gray-400">© 2024 All rights reserved</p>
             </div>
           </div>
