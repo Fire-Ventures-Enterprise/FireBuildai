@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
+import { verificationService } from "./verificationService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Metrics endpoint
@@ -604,6 +605,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error uploading quote document:", error);
       res.status(500).json({ message: "Failed to upload quote document" });
+    }
+  });
+
+  // Authentication & Verification Routes
+  app.post("/api/auth/send-email-verification", async (req, res) => {
+    try {
+      const { email, purpose = 'registration' } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const success = await verificationService.sendEmailVerification(email, purpose);
+      
+      if (success) {
+        res.json({ message: "Verification code sent to email" });
+      } else {
+        res.status(500).json({ message: "Failed to send verification email" });
+      }
+    } catch (error) {
+      console.error("Error sending email verification:", error);
+      res.status(500).json({ message: "Failed to send verification email" });
+    }
+  });
+
+  app.post("/api/auth/send-sms-verification", async (req, res) => {
+    try {
+      const { phone, purpose = 'registration' } = req.body;
+      
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      const success = await verificationService.sendSMSVerification(phone, purpose);
+      
+      if (success) {
+        res.json({ message: "Verification code sent to phone" });
+      } else {
+        res.status(500).json({ message: "Failed to send verification SMS" });
+      }
+    } catch (error) {
+      console.error("Error sending SMS verification:", error);
+      res.status(500).json({ message: "Failed to send verification SMS" });
+    }
+  });
+
+  app.post("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { email, code, purpose = 'registration' } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ message: "Email and verification code are required" });
+      }
+
+      const isValid = await verificationService.verifyEmailCode(email, code, purpose);
+      
+      if (isValid) {
+        res.json({ message: "Email verified successfully", verified: true });
+      } else {
+        res.status(400).json({ message: "Invalid or expired verification code", verified: false });
+      }
+    } catch (error) {
+      console.error("Error verifying email code:", error);
+      res.status(500).json({ message: "Failed to verify email code" });
+    }
+  });
+
+  app.post("/api/auth/verify-sms", async (req, res) => {
+    try {
+      const { phone, code, purpose = 'registration' } = req.body;
+      
+      if (!phone || !code) {
+        return res.status(400).json({ message: "Phone number and verification code are required" });
+      }
+
+      const isValid = await verificationService.verifySMSCode(phone, code, purpose);
+      
+      if (isValid) {
+        res.json({ message: "Phone verified successfully", verified: true });
+      } else {
+        res.status(400).json({ message: "Invalid or expired verification code", verified: false });
+      }
+    } catch (error) {
+      console.error("Error verifying SMS code:", error);
+      res.status(500).json({ message: "Failed to verify SMS code" });
+    }
+  });
+
+  app.post("/api/auth/check-verification-status", async (req, res) => {
+    try {
+      const { email, phone } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const isFullyVerified = await verificationService.isUserFullyVerified(email, phone);
+      
+      res.json({ 
+        fullyVerified: isFullyVerified,
+        emailRequired: true,
+        phoneRequired: !!phone
+      });
+    } catch (error) {
+      console.error("Error checking verification status:", error);
+      res.status(500).json({ message: "Failed to check verification status" });
+    }
+  });
+
+  app.post("/api/auth/activate-account", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const success = await verificationService.activateUserAccount(email);
+      
+      if (success) {
+        res.json({ message: "Account activated successfully", activated: true });
+      } else {
+        res.status(400).json({ message: "Account cannot be activated. Ensure all verification steps are completed.", activated: false });
+      }
+    } catch (error) {
+      console.error("Error activating account:", error);
+      res.status(500).json({ message: "Failed to activate account" });
     }
   });
 

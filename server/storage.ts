@@ -31,6 +31,8 @@ import {
   type InsertQuote,
   type PoLineItem,
   type InsertPoLineItem,
+  type VerificationCode,
+  type InsertVerificationCode,
   contractors,
   jobs,
   payments,
@@ -47,6 +49,7 @@ import {
   purchaseOrders,
   quotes,
   poLineItems,
+  verificationCodes,
   companies,
 } from "@shared/schema";
 import { db } from "./db";
@@ -304,6 +307,15 @@ export interface IStorage {
   getQuotes(): Promise<Quote[]>;
   createQuote(quote: InsertQuote): Promise<Quote>;
   updateQuoteStatus(quoteId: string, status: string): Promise<Quote>;
+
+  // Verification Methods
+  createVerificationCode(verificationCode: InsertVerificationCode): Promise<VerificationCode>;
+  getValidVerificationCode(email: string | null, phone: string | null, code: string, type: 'email' | 'sms', purpose: 'registration' | 'password_reset'): Promise<VerificationCode | null>;
+  markVerificationCodeAsUsed(id: string): Promise<void>;
+  getUserByEmail(email: string): Promise<any>;
+  markEmailAsVerified(email: string): Promise<void>;
+  markPhoneAsVerified(phone: string): Promise<void>;
+  activateUser(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1331,6 +1343,74 @@ export class DatabaseStorage implements IStorage {
       .where(eq(quotes.id, quoteId))
       .returning();
     return updatedQuote;
+  }
+
+  // Verification Methods
+  async createVerificationCode(verificationCode: InsertVerificationCode): Promise<VerificationCode> {
+    const [newCode] = await db.insert(verificationCodes).values(verificationCode).returning();
+    return newCode;
+  }
+
+  async getValidVerificationCode(
+    email: string | null, 
+    phone: string | null, 
+    code: string, 
+    type: 'email' | 'sms', 
+    purpose: 'registration' | 'password_reset'
+  ): Promise<VerificationCode | null> {
+    const conditions = [
+      eq(verificationCodes.code, code),
+      eq(verificationCodes.type, type),
+      eq(verificationCodes.purpose, purpose),
+      sql`${verificationCodes.expiresAt} > NOW()`,
+      sql`${verificationCodes.usedAt} IS NULL`
+    ];
+
+    if (email) {
+      conditions.push(eq(verificationCodes.email, email));
+    }
+    if (phone) {
+      conditions.push(eq(verificationCodes.phone, phone));
+    }
+
+    const [result] = await db
+      .select()
+      .from(verificationCodes)
+      .where(and(...conditions))
+      .limit(1);
+
+    return result || null;
+  }
+
+  async markVerificationCodeAsUsed(id: string): Promise<void> {
+    await db
+      .update(verificationCodes)
+      .set({ usedAt: new Date() })
+      .where(eq(verificationCodes.id, id));
+  }
+
+  async getUserByEmail(email: string): Promise<any> {
+    // For now, return a placeholder since we don't have users table implemented yet
+    // This will need to be updated when user authentication is fully implemented
+    return null;
+  }
+
+  async markEmailAsVerified(email: string): Promise<void> {
+    // Placeholder for marking email as verified
+    // This will need to be implemented when user table is added
+    console.log(`Email ${email} marked as verified`);
+  }
+
+  async markPhoneAsVerified(phone: string): Promise<void> {
+    // Placeholder for marking phone as verified  
+    // This will need to be implemented when user table is added
+    console.log(`Phone ${phone} marked as verified`);
+  }
+
+  async activateUser(userId: string): Promise<void> {
+    // Placeholder for activating user account
+    // This will need to be implemented when user table is added
+    console.log(`User ${userId} account activated`);
   }
 }
 

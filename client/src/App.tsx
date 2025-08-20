@@ -26,6 +26,7 @@ import PurchaseOrders from "@/pages/PurchaseOrders";
 import CreatePurchaseOrder from "@/pages/CreatePurchaseOrder";
 import Quotes from "@/pages/Quotes";
 import SettingsPage from "@/pages/Settings";
+import Verification from "@/pages/Verification";
 import NotFound from "@/pages/not-found";
 
 function AppLayout() {
@@ -116,6 +117,7 @@ function AppContent() {
       <Route path="/" component={Landing} />
       <Route path="/landing" component={Landing} />
       <Route path="/demo" component={Demo} />
+      <Route path="/verification" component={Verification} />
       
       {/* Main Application - With sidebar */}
       <Route path="/dashboard" component={AppLayout} />
