@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import logoLight from "@/assets/logo-light.jpg";
-import logoDark from "@/assets/logo-dark.jpg";
+import logoTransparent from "@/assets/logo-transparent.png";
 import { 
   Play, 
   CheckCircle, 
@@ -85,19 +84,13 @@ export default function Landing() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="border-b bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <div className="container mx-auto px-4 py-8 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
-              src={logoLight}
+              src={logoTransparent}
               alt="FireBuild.ai" 
-              className="h-24 w-auto dark:hidden"
-              data-testid="landing-header-logo-light"
-            />
-            <img 
-              src={logoDark}
-              alt="FireBuild.ai" 
-              className="h-24 w-auto hidden dark:block"
-              data-testid="landing-header-logo-dark"
+              className="h-12 w-auto"
+              data-testid="landing-header-logo"
             />
           </div>
           
@@ -365,9 +358,9 @@ export default function Landing() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <img 
-                  src={logoDark} 
+                  src={logoTransparent} 
                   alt="FireBuild.ai" 
-                  className="h-24 w-auto"
+                  className="h-12 w-auto"
                   data-testid="footer-logo"
                 />
               </div>

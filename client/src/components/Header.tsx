@@ -1,7 +1,6 @@
 import { Bell, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import logoLight from "@/assets/logo-light.jpg";
-import logoDark from "@/assets/logo-dark.jpg";
+import logoTransparent from "@/assets/logo-transparent.png";
 
 export default function Header() {
   const [location] = useLocation();
@@ -11,20 +10,14 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-fire-dark/90 border-b border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-36">
+        <div className="flex items-center justify-between h-20">
           <Link href="/">
             <div className="flex items-center space-x-4 cursor-pointer" data-testid="header-logo">
               <img 
-                src={logoLight}
+                src={logoTransparent}
                 alt="FireBuild.ai" 
-                className="h-32 w-auto dark:hidden"
-                data-testid="header-logo-light"
-              />
-              <img 
-                src={logoDark}
-                alt="FireBuild.ai" 
-                className="h-32 w-auto hidden dark:block"
-                data-testid="header-logo-dark"
+                className="h-16 w-auto"
+                data-testid="header-logo"
               />
               <div>
                 <p className="text-sm text-gray-400">Contractor Management Platform</p>
