@@ -1,6 +1,6 @@
-# FireBuild.ai Marketing Website
+# firebuildai.com Marketing Website
 
-This is the marketing website for FireBuild.ai that will be deployed to `firebuildai.com`.
+This is the marketing website for firebuildai.com that will be deployed to `firebuildai.com`.
 
 ## Features
 
