@@ -2,6 +2,14 @@
 
 FireBuild.ai is a comprehensive contractor management platform that provides real-time GPS tracking, automated expense processing, client communication tools, and business analytics for construction companies. The application enables contractors to track their workforce, manage jobs, process payments, and communicate with clients through a unified dashboard interface.
 
+## Domain Architecture (Implemented)
+
+**Professional Dual-Domain Structure:**
+- **Marketing Website**: `firebuildai.com` - Professional landing page with feature showcase, pricing, and CTAs
+- **Application Platform**: `appfirebuildai.com` - Full contractor management application with dashboard
+
+This follows SaaS industry best practices with separate domains for marketing and application hosting.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
