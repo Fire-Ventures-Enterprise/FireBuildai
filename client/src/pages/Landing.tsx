@@ -94,7 +94,7 @@ export default function Landing() {
           <div className="flex items-center gap-2">
             <img 
               src={logoTransparent}
-              alt="FireBuild.ai" 
+              alt="firebuildai.com" 
               className="h-12 w-auto"
               data-testid="landing-header-logo"
             />
@@ -172,7 +172,7 @@ export default function Landing() {
               </DialogTrigger>
               <DialogContent className="max-w-4xl">
                 <DialogHeader>
-                  <DialogTitle>FireBuild.ai Platform Demo</DialogTitle>
+                  <DialogTitle>firebuildai.com Platform Demo</DialogTitle>
                 </DialogHeader>
                 <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                   <div className="text-center">
@@ -490,7 +490,7 @@ export default function Landing() {
               <div className="flex items-center gap-2 mb-4">
                 <img 
                   src={logoTransparent} 
-                  alt="FireBuild.ai" 
+                  alt="firebuildai.com" 
                   className="h-12 w-auto"
                   data-testid="footer-logo"
                 />
@@ -532,7 +532,7 @@ export default function Landing() {
           </div>
           
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 FireBuild.ai. All rights reserved.</p>
+            <p>&copy; 2024 firebuildai.com. All rights reserved.</p>
           </div>
         </div>
       </footer>
