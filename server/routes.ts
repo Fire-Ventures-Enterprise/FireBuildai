@@ -486,7 +486,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/estimates", async (req, res) => {
     try {
-      const estimate = await storage.createEstimate(req.body);
+      // Convert date strings to Date objects for database
+      const estimateData = {
+        ...req.body,
+        expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined,
+      };
+      const estimate = await storage.createEstimate(estimateData);
       res.status(201).json(estimate);
     } catch (error) {
       console.error("Error creating estimate:", error);
