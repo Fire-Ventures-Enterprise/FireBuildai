@@ -14,6 +14,8 @@ import Demo from "@/pages/Demo";
 import Invoices from "@/pages/Invoices";
 import Estimates from "@/pages/Estimates";
 import EstimatesSimple from "@/pages/EstimatesSimple";
+import EstimateNew from "@/pages/EstimateNew";
+import EstimateView from "@/pages/EstimateView";
 import EstimatesJoist from "@/pages/EstimatesJoist";
 import EstimateDetail from "@/pages/EstimateDetail";
 import EstimateBuilder from "@/pages/EstimateBuilder";
@@ -112,7 +114,8 @@ function AppLayout() {
             <Route path="/quotes" component={Quotes} />
             <Route path="/invoices" component={Invoices} />
             <Route path="/estimates" component={EstimatesSimple} />
-            <Route path="/estimates/new" component={EstimatesSimple} />
+            <Route path="/estimates/new" component={EstimateNew} />
+            <Route path="/estimates/:id" component={EstimateView} />
             <Route path="/documents" component={Documents} />
             <Route path="/tracking" component={Tracking} />
             <Route path="/contractors" component={Contractors} />

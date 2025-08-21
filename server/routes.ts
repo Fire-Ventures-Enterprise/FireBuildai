@@ -499,6 +499,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/estimates/:id", async (req, res) => {
+    try {
+      const estimate = await storage.getEstimate(req.params.id);
+      if (!estimate) {
+        return res.status(404).json({ message: "Estimate not found" });
+      }
+      res.json(estimate);
+    } catch (error) {
+      console.error("Error fetching estimate:", error);
+      res.status(500).json({ message: "Failed to fetch estimate" });
+    }
+  });
+
   app.patch("/api/estimates/:id", async (req, res) => {
     try {
       const estimate = await storage.updateEstimate(req.params.id, req.body);
@@ -506,6 +519,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating estimate:", error);
       res.status(500).json({ message: "Failed to update estimate" });
+    }
+  });
+
+  app.delete("/api/estimates/:id", async (req, res) => {
+    try {
+      await storage.deleteEstimate(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting estimate:", error);
+      res.status(500).json({ message: "Failed to delete estimate" });
     }
   });
 

@@ -2015,6 +2015,16 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(estimates).orderBy(desc(estimates.createdAt));
   }
 
+  async getEstimate(estimateId: string): Promise<Estimate | null> {
+    const [estimate] = await db
+      .select()
+      .from(estimates)
+      .where(eq(estimates.id, estimateId))
+      .limit(1);
+    
+    return estimate || null;
+  }
+
   async createEstimate(estimateData: InsertEstimate): Promise<Estimate> {
     const cleanData = {
       ...estimateData,
@@ -2023,6 +2033,19 @@ export class DatabaseStorage implements IStorage {
     };
     const [estimate] = await db.insert(estimates).values(cleanData).returning();
     return estimate;
+  }
+
+  async updateEstimate(estimateId: string, updates: Partial<Estimate>): Promise<Estimate> {
+    const [updatedEstimate] = await db
+      .update(estimates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(estimates.id, estimateId))
+      .returning();
+    return updatedEstimate;
+  }
+
+  async deleteEstimate(estimateId: string): Promise<void> {
+    await db.delete(estimates).where(eq(estimates.id, estimateId));
   }
 
   async updateEstimate(estimateId: string, updates: Partial<Estimate>): Promise<Estimate> {
