@@ -72,7 +72,7 @@ function AppLayout() {
       )}
       
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen">
         {/* Header with Menu Button */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-card">
           <Button
@@ -99,7 +99,7 @@ function AppLayout() {
           </div>
         </div>
 
-        <main className="h-full overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch', height: 'calc(100vh - 65px)' }}>
           <Switch>
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/jobs" component={Jobs} />

@@ -84,6 +84,52 @@ body {
   color: var(--foreground);
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
+  /* Mobile scrolling fixes */
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+}
+
+/* Mobile scrolling fixes */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure all scrollable containers work on mobile */
+.overflow-y-auto, .overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Fix for iOS Safari mobile scrolling */
+@supports (-webkit-touch-callout: none) {
+  .overflow-y-auto, .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Mobile viewport fixes */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+  
+  /* Prevent zoom on input focus for mobile */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Ensure dialogs are scrollable on mobile */
+  [data-radix-scroll-area-viewport] {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix for mobile dialog scrolling */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
 }
 
 /* Clean card effect */
