@@ -139,14 +139,14 @@ export default function Landing() {
           <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
             Streamline Your
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {" "}Construction Business
+              {" "}Construction and Trade Business
             </span>
           </h1>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Complete contractor management platform with GPS tracking, automated payments, 
             client communication, and business analytics. Everything you need to run your 
-            construction business efficiently.
+            construction and trade business efficiently.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
