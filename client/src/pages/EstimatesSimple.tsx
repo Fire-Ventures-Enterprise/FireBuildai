@@ -23,7 +23,7 @@ export default function EstimatesSimple() {
         jobTitle: "Kitchen Renovation",
         description: "Complete kitchen renovation project",
         amount: 25000,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
         status: 'draft',
         documentNumber: `EST-${Date.now()}`,
       };
