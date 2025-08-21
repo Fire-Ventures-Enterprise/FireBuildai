@@ -13,6 +13,7 @@ import Landing from "@/pages/Landing";
 import Demo from "@/pages/Demo";
 import Invoices from "@/pages/Invoices";
 import Estimates from "@/pages/Estimates";
+import EstimatesSimple from "@/pages/EstimatesSimple";
 import Documents from "@/pages/Documents";
 import Tracking from "@/pages/Tracking";
 import Contractors from "@/pages/Contractors";
@@ -107,8 +108,8 @@ function AppLayout() {
             <Route path="/purchase-orders/create" component={CreatePurchaseOrder} />
             <Route path="/quotes" component={Quotes} />
             <Route path="/invoices" component={Invoices} />
-            <Route path="/estimates" component={Estimates} />
-            <Route path="/estimates/new" component={Estimates} />
+            <Route path="/estimates" component={EstimatesSimple} />
+            <Route path="/estimates/new" component={EstimatesSimple} />
             <Route path="/documents" component={Documents} />
             <Route path="/tracking" component={Tracking} />
             <Route path="/contractors" component={Contractors} />
