@@ -2016,7 +2016,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEstimate(estimateData: InsertEstimate): Promise<Estimate> {
-    const [estimate] = await db.insert(estimates).values(estimateData).returning();
+    const cleanData = {
+      ...estimateData,
+      // Ensure timestamps are properly formatted
+      expiresAt: estimateData.expiresAt instanceof Date ? estimateData.expiresAt : new Date(estimateData.expiresAt!),
+    };
+    const [estimate] = await db.insert(estimates).values(cleanData).returning();
     return estimate;
   }
 
