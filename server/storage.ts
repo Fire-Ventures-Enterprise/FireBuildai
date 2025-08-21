@@ -1537,6 +1537,74 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
+  // Missing document methods for client portal
+  async getAllClientDocuments(): Promise<JobDocument[]> {
+    return await db
+      .select()
+      .from(jobDocuments)
+      .innerJoin(jobs, eq(jobDocuments.jobId, jobs.id))
+      .where(eq(jobs.companyId, this.defaultCompanyId))
+      .orderBy(desc(jobDocuments.createdAt));
+  }
+
+  async getClientDocuments(clientId: string): Promise<JobDocument[]> {
+    return await db
+      .select()
+      .from(jobDocuments)
+      .innerJoin(jobs, eq(jobDocuments.jobId, jobs.id))
+      .where(and(
+        eq(jobs.clientId, clientId),
+        eq(jobs.companyId, this.defaultCompanyId)
+      ))
+      .orderBy(desc(jobDocuments.createdAt));
+  }
+
+  async createClientDocument(document: InsertJobDocument): Promise<JobDocument> {
+    const [newDocument] = await db.insert(jobDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  // Missing stats methods
+  async getClientStats() {
+    const totalClients = await db
+      .select({ count: count() })
+      .from(clients)
+      .where(eq(clients.companyId, this.defaultCompanyId));
+    
+    const activeClients = await db
+      .select({ count: count() })
+      .from(clients)
+      .where(and(
+        eq(clients.companyId, this.defaultCompanyId),
+        eq(clients.isActive, true)
+      ));
+
+    return {
+      total: totalClients[0]?.count || 0,
+      active: activeClients[0]?.count || 0
+    };
+  }
+
+  async getFleetStats() {
+    const totalVehicles = await db
+      .select({ count: count() })
+      .from(vehicles)
+      .where(eq(vehicles.companyId, this.defaultCompanyId));
+    
+    const activeVehicles = await db
+      .select({ count: count() })
+      .from(vehicles)
+      .where(and(
+        eq(vehicles.companyId, this.defaultCompanyId),
+        eq(vehicles.status, 'active')
+      ));
+
+    return {
+      total: totalVehicles[0]?.count || 0,
+      active: activeVehicles[0]?.count || 0
+    };
+  }
+
   // Communications
   async getClientCommunications(clientId: string): Promise<Communication[]> {
     return await db

@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall, Send, Camera, Receipt, Calculator } from "lucide-react";
+import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall, Send, Camera, Receipt, Calculator, Upload, Settings, Download, UserPlus } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -130,6 +130,7 @@ export default function Clients() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showAddClientDialog, setShowAddClientDialog] = useState(false);
+  const [showUploadDocumentDialog, setShowUploadDocumentDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const deviceInfo = useDeviceDetection();
@@ -701,10 +702,97 @@ export default function Clients() {
                       </TabsContent>
 
                       <TabsContent value="documents" className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold">Documents</h3>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="gap-2"
+                              onClick={() => setLocation('/documents')}
+                              data-testid="button-manage-templates"
+                            >
+                              <Settings className="h-4 w-4" />
+                              Manage Templates
+                            </Button>
+                            <Dialog open={showUploadDocumentDialog} onOpenChange={setShowUploadDocumentDialog}>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  className="gap-2"
+                                  data-testid="button-upload-document"
+                                >
+                                  <Upload className="h-4 w-4" />
+                                  Upload Document
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>Upload Document for {selectedClient?.name}</DialogTitle>
+                                  <DialogDescription>
+                                    Upload invoices, estimates, contracts, or other documents for this client
+                                  </DialogDescription>
+                                </DialogHeader>
+                                
+                                <div className="space-y-4">
+                                  <div>
+                                    <label className="text-sm font-medium">Document Type</label>
+                                    <Select defaultValue="invoice">
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="invoice">Invoice</SelectItem>
+                                        <SelectItem value="estimate">Estimate</SelectItem>
+                                        <SelectItem value="contract">Contract</SelectItem>
+                                        <SelectItem value="work_order">Work Order</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  <div>
+                                    <label className="text-sm font-medium">Document Name</label>
+                                    <Input placeholder="Enter document name" />
+                                  </div>
+
+                                  <div>
+                                    <label className="text-sm font-medium">File Upload</label>
+                                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        Click to upload or drag and drop
+                                      </p>
+                                      <p className="text-xs text-gray-400">PDF, DOC, DOCX up to 10MB</p>
+                                      <input
+                                        type="file"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        accept=".pdf,.doc,.docx"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex gap-2 pt-4">
+                                    <Button 
+                                      variant="outline" 
+                                      onClick={() => setShowUploadDocumentDialog(false)}
+                                      className="flex-1"
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button className="flex-1">
+                                      Upload Document
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                        </div>
+
                         {clientDocuments && clientDocuments.length > 0 ? (
                           <div className="space-y-4">
                             {clientDocuments.map((document) => (
-                              <Card key={document.id}>
+                              <Card key={document.id} className="hover:shadow-md transition-shadow">
                                 <CardContent className="p-6">
                                   <div className="flex items-start justify-between mb-4">
                                     <div className="flex-1">
@@ -743,9 +831,41 @@ export default function Clients() {
                                         <span>Signed: {formatDate(document.signedAt)}</span>
                                       )}
                                     </div>
-                                    <Button variant="outline" size="sm">
-                                      View PDF
-                                    </Button>
+                                    <div className="flex gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => window.open(document.documentUrl, '_blank')}
+                                        data-testid={`button-view-document-${document.id}`}
+                                      >
+                                        <Eye className="h-4 w-4 mr-1" />
+                                        View PDF
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          const link = document.createElement('a');
+                                          link.href = document.documentUrl;
+                                          link.download = document.documentName;
+                                          link.click();
+                                        }}
+                                        data-testid={`button-download-document-${document.id}`}
+                                      >
+                                        <Download className="h-4 w-4 mr-1" />
+                                        Download
+                                      </Button>
+                                      {document.status === 'draft' && (
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          data-testid={`button-send-document-${document.id}`}
+                                        >
+                                          <Send className="h-4 w-4 mr-1" />
+                                          Send
+                                        </Button>
+                                      )}
+                                    </div>
                                   </div>
                                 </CardContent>
                               </Card>
@@ -753,9 +873,31 @@ export default function Clients() {
                           </div>
                         ) : (
                           <Card>
-                            <CardContent className="p-6 text-center">
-                              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                              <p className="text-gray-500 dark:text-gray-400">No documents found for this client</p>
+                            <CardContent className="p-8 text-center">
+                              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                No documents found
+                              </h3>
+                              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                                Start by uploading documents or creating new ones from templates
+                              </p>
+                              <div className="flex justify-center gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setLocation('/documents')}
+                                  data-testid="button-create-from-template"
+                                >
+                                  Create from Template
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => setShowUploadDocumentDialog(true)}
+                                  data-testid="button-upload-first-document"
+                                >
+                                  Upload Document
+                                </Button>
+                              </div>
                             </CardContent>
                           </Card>
                         )}
