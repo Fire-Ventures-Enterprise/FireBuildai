@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { type Estimate } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,21 +9,26 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, Search, Plus, Eye, Edit, Send, FileDown, Filter, CheckCircle, XCircle } from "lucide-react";
+import { Calculator, Search, Plus, Eye, Edit, Send, FileDown, Filter, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-interface Estimate {
-  id: string;
-  jobId: string;
-  jobTitle: string;
-  clientName: string;
-  documentNumber: string;
-  amount: number;
-  status: 'draft' | 'sent' | 'approved' | 'declined' | 'expired';
-  expiresAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+const estimateSchema = z.object({
+  clientId: z.string().min(1, "Client is required"),
+  jobTitle: z.string().min(1, "Job title is required"),
+  description: z.string().optional(),
+  amount: z.number().min(0.01, "Amount must be greater than 0"),
+  expiresAt: z.string().min(1, "Expiration date is required"),
+});
+
+type EstimateFormData = z.infer<typeof estimateSchema>;
+
+// Using Estimate type from shared schema
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
@@ -36,7 +42,21 @@ export default function Estimates() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedEstimate, setSelectedEstimate] = useState<Estimate | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
+  
+  // Check if we're on the new estimate route
+  const isNewEstimatePage = location.includes('/estimates/new');
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const clientId = urlParams.get('clientId');
+
+  // Auto-open create dialog if on new estimate page
+  useEffect(() => {
+    if (isNewEstimatePage) {
+      setShowCreateDialog(true);
+    }
+  }, [isNewEstimatePage]);
 
   const { data: estimates = [], isLoading } = useQuery<Estimate[]>({
     queryKey: ["/api/estimates"],
@@ -144,10 +164,53 @@ export default function Estimates() {
             </p>
           </div>
         </div>
-        <Button data-testid="button-create-estimate">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Estimate
-        </Button>
+        <Dialog open={showCreateDialog} onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          if (!open && isNewEstimatePage) {
+            setLocation('/estimates');
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-create-estimate">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Estimate
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {isNewEstimatePage && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setLocation('/clients')}
+                    className="mr-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <Calculator className="h-5 w-5" />
+                Create New Estimate
+              </DialogTitle>
+            </DialogHeader>
+            
+            <EstimateForm 
+              clientId={clientId}
+              onSuccess={() => {
+                setShowCreateDialog(false);
+                if (isNewEstimatePage) {
+                  setLocation('/estimates');
+                }
+              }}
+              onCancel={() => {
+                setShowCreateDialog(false);
+                if (isNewEstimatePage) {
+                  setLocation('/clients');
+                }
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters and Search */}
@@ -313,5 +376,188 @@ export default function Estimates() {
         </Dialog>
       )}
     </div>
+  );
+}
+
+// EstimateForm Component
+interface EstimateFormProps {
+  clientId?: string | null;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+function EstimateForm({ clientId, onSuccess, onCancel }: EstimateFormProps) {
+  const { toast } = useToast();
+  
+  const { data: clients = [] } = useQuery({
+    queryKey: ["/api/clients"],
+  });
+
+  const form = useForm<EstimateFormData>({
+    resolver: zodResolver(estimateSchema),
+    defaultValues: {
+      clientId: clientId || "",
+      jobTitle: "",
+      description: "",
+      amount: 0,
+      expiresAt: "",
+    },
+  });
+
+  const createEstimateMutation = useMutation({
+    mutationFn: (data: EstimateFormData) => {
+      const estimateData = {
+        ...data,
+        expiresAt: new Date(data.expiresAt),
+        status: 'draft',
+        documentNumber: `EST-${Date.now()}`,
+      };
+      return apiRequest("POST", "/api/estimates", estimateData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/estimates"] });
+      toast({
+        title: "Success",
+        description: "Estimate created successfully",
+      });
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: EstimateFormData) => {
+    createEstimateMutation.mutate(data);
+  };
+
+  // Get default expiration date (30 days from now)
+  const defaultExpirationDate = new Date();
+  defaultExpirationDate.setDate(defaultExpirationDate.getDate() + 30);
+  const defaultDateString = defaultExpirationDate.toISOString().split('T')[0];
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="clientId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Client</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a client" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {(clients as any[]).map((client: any) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Estimate Amount</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="jobTitle"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Job Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter job title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description (Optional)</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Describe the work to be performed..."
+                  rows={4}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="expiresAt"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Expiration Date</FormLabel>
+              <FormControl>
+                <Input 
+                  type="date"
+                  {...field}
+                  defaultValue={defaultDateString}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-3 pt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            className="flex-1"
+            disabled={createEstimateMutation.isPending}
+          >
+            {createEstimateMutation.isPending ? "Creating..." : "Create Estimate"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

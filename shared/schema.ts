@@ -260,6 +260,23 @@ export const clientPhotos = pgTable("client_photos", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const estimates = pgTable("estimates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").references(() => jobs.id),
+  clientId: varchar("client_id").references(() => clients.id).notNull(),
+  documentNumber: text("document_number").notNull().unique(),
+  jobTitle: text("job_title").notNull(),
+  description: text("description"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("draft"), // draft, sent, approved, declined, expired
+  expiresAt: timestamp("expires_at").notNull(),
+  sentAt: timestamp("sent_at"),
+  approvedAt: timestamp("approved_at"),
+  declinedAt: timestamp("declined_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertUserSessionSchema = createInsertSchema(userSessions).omit({ id: true, createdAt: true });
@@ -273,6 +290,7 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true,
 export const insertClientMessageSchema = createInsertSchema(clientMessages).omit({ id: true, createdAt: true });
 export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertJobDocumentSchema = createInsertSchema(jobDocuments).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertEstimateSchema = createInsertSchema(estimates).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCompanySettingsSchema = createInsertSchema(companySettings).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCommunicationSchema = createInsertSchema(communications).omit({ id: true, createdAt: true, updatedAt: true });
@@ -358,6 +376,8 @@ export type Communication = typeof communications.$inferSelect;
 export type InsertCommunication = z.infer<typeof insertCommunicationSchema>;
 export type ClientPhoto = typeof clientPhotos.$inferSelect;
 export type InsertClientPhoto = z.infer<typeof insertClientPhotoSchema>;
+export type Estimate = typeof estimates.$inferSelect;
+export type InsertEstimate = z.infer<typeof insertEstimateSchema>;
 
 // Purchase Order and Quote tables
 export const quotes = pgTable("quotes", {

@@ -108,6 +108,7 @@ function AppLayout() {
             <Route path="/quotes" component={Quotes} />
             <Route path="/invoices" component={Invoices} />
             <Route path="/estimates" component={Estimates} />
+            <Route path="/estimates/new" component={Estimates} />
             <Route path="/documents" component={Documents} />
             <Route path="/tracking" component={Tracking} />
             <Route path="/contractors" component={Contractors} />

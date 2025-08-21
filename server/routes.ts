@@ -473,6 +473,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Estimates endpoints
+  app.get("/api/estimates", async (req, res) => {
+    try {
+      const estimates = await storage.getEstimates();
+      res.json(estimates);
+    } catch (error) {
+      console.error("Error fetching estimates:", error);
+      res.status(500).json({ message: "Failed to fetch estimates" });
+    }
+  });
+
+  app.post("/api/estimates", async (req, res) => {
+    try {
+      const estimate = await storage.createEstimate(req.body);
+      res.status(201).json(estimate);
+    } catch (error) {
+      console.error("Error creating estimate:", error);
+      res.status(500).json({ message: "Failed to create estimate" });
+    }
+  });
+
+  app.patch("/api/estimates/:id", async (req, res) => {
+    try {
+      const estimate = await storage.updateEstimate(req.params.id, req.body);
+      res.json(estimate);
+    } catch (error) {
+      console.error("Error updating estimate:", error);
+      res.status(500).json({ message: "Failed to update estimate" });
+    }
+  });
+
   // Client photos endpoints
   app.get("/api/clients/:id/photos", async (req, res) => {
     try {

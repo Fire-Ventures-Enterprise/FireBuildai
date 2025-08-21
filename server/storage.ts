@@ -41,6 +41,8 @@ import {
   type InsertContractorInvoice,
   type ApPaymentCalendar,
   type InsertApPaymentCalendar,
+  type Estimate,
+  type InsertEstimate,
   contractors,
   jobs,
   payments,
@@ -63,6 +65,7 @@ import {
   companies,
   contractorInvoices,
   apPaymentCalendar,
+  estimates,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, count, sum, like, or, and } from "drizzle-orm";
@@ -378,6 +381,11 @@ export interface IStorage {
   updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice>;
   getInvoices(): Promise<Invoice[]>;
   deleteInvoice(id: string): Promise<void>;
+
+  // Estimates
+  getEstimates(): Promise<Estimate[]>;
+  createEstimate(estimate: InsertEstimate): Promise<Estimate>;
+  updateEstimate(estimateId: string, updates: Partial<Estimate>): Promise<Estimate>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2000,6 +2008,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInvoice(id: string): Promise<void> {
     await db.delete(invoices).where(eq(invoices.id, id));
+  }
+
+  // Estimates implementation
+  async getEstimates(): Promise<Estimate[]> {
+    return await db.select().from(estimates).orderBy(desc(estimates.createdAt));
+  }
+
+  async createEstimate(estimateData: InsertEstimate): Promise<Estimate> {
+    const [estimate] = await db.insert(estimates).values(estimateData).returning();
+    return estimate;
+  }
+
+  async updateEstimate(estimateId: string, updates: Partial<Estimate>): Promise<Estimate> {
+    const [estimate] = await db
+      .update(estimates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(estimates.id, estimateId))
+      .returning();
+    return estimate;
   }
 }
 
