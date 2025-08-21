@@ -9,7 +9,7 @@ export interface NavigationItem {
 }
 
 const DEFAULT_NAVIGATION: NavigationItem[] = [
-  { id: "dashboard", name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { id: "dashboard", name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { id: "jobs", name: "Jobs", href: "/jobs", icon: Briefcase },
   { id: "purchase-orders", name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
   { id: "quotes", name: "Quotes", href: "/quotes", icon: FileCheck },
