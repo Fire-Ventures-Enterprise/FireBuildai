@@ -62,6 +62,10 @@ export default function Estimates() {
     queryKey: ["/api/estimates"],
   });
 
+  const { data: clients = [] } = useQuery({
+    queryKey: ["/api/clients"],
+  });
+
   const createEstimateMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/estimates", data),
     onSuccess: () => {
@@ -111,11 +115,13 @@ export default function Estimates() {
     // Filter by search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter((estimate: Estimate) =>
-        estimate.documentNumber.toLowerCase().includes(term) ||
-        estimate.clientName.toLowerCase().includes(term) ||
-        estimate.jobTitle.toLowerCase().includes(term)
-      );
+      filtered = filtered.filter((estimate: Estimate) => {
+        const client = clients.find((c: any) => c.id === estimate.clientId);
+        const clientName = client?.name || '';
+        return estimate.documentNumber.toLowerCase().includes(term) ||
+          clientName.toLowerCase().includes(term) ||
+          estimate.jobTitle.toLowerCase().includes(term);
+      });
     }
     
     return filtered;
@@ -273,9 +279,9 @@ export default function Estimates() {
                       </Badge>
                     </div>
                     <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                      <p><span className="font-medium">Client:</span> {estimate.clientName}</p>
+                      <p><span className="font-medium">Client:</span> {clients.find((c: any) => c.id === estimate.clientId)?.name || 'Unknown Client'}</p>
                       <p><span className="font-medium">Job:</span> {estimate.jobTitle}</p>
-                      <p><span className="font-medium">Amount:</span> {formatCurrency(estimate.amount)}</p>
+                      <p><span className="font-medium">Amount:</span> {formatCurrency(Number(estimate.amount))}</p>
                       <p><span className="font-medium">Expires:</span> {new Date(estimate.expiresAt).toLocaleDateString()}</p>
                     </div>
                   </div>
@@ -352,14 +358,14 @@ export default function Estimates() {
                     <div className="space-y-2 text-sm">
                       <p><span className="font-medium">Number:</span> {selectedEstimate.documentNumber}</p>
                       <p><span className="font-medium">Status:</span> {selectedEstimate.status}</p>
-                      <p><span className="font-medium">Amount:</span> {formatCurrency(selectedEstimate.amount)}</p>
+                      <p><span className="font-medium">Amount:</span> {formatCurrency(Number(selectedEstimate.amount))}</p>
                       <p><span className="font-medium">Expires:</span> {new Date(selectedEstimate.expiresAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Client & Job</h4>
                     <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">Client:</span> {selectedEstimate.clientName}</p>
+                      <p><span className="font-medium">Client:</span> {clients.find((c: any) => c.id === selectedEstimate.clientId)?.name || 'Unknown Client'}</p>
                       <p><span className="font-medium">Job:</span> {selectedEstimate.jobTitle}</p>
                     </div>
                   </div>
