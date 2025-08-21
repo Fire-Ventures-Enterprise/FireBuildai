@@ -2,6 +2,13 @@
 
 FireBuild.ai is a comprehensive contractor management platform that provides real-time GPS tracking, automated expense processing, client communication tools, and business analytics for construction companies. The application enables contractors to track their workforce, manage jobs, process payments, and communicate with clients through a unified dashboard interface.
 
+## Recent Updates (January 2025)
+- ✅ **Critical Navigation Fix**: Dashboard button now correctly routes to application dashboard (/dashboard) instead of marketing landing page
+- ✅ **Mobile Optimization**: Comprehensive mobile scrolling fixes with webkit-overflow-scrolling and touch-action support
+- ✅ **Client Portal Enhancement**: Added invoice/estimate creation buttons directly in client details dialog
+- ✅ **Database Schema**: Fixed missing address column in jobs table with proper migration
+- ✅ **UI/UX Improvements**: Smooth mobile experience with proper container layouts and scroll behavior
+
 ## Domain Architecture (Implemented)
 
 **Professional Dual-Domain Structure:**
