@@ -151,11 +151,11 @@ function AppContent() {
       
       {/* Main Application - With sidebar */}
       <Route path="/dashboard" component={AppLayout} />
-      <Route path="/jobs" component={AppLayout} />
-      <Route path="/purchase-orders" component={AppLayout} />
-      <Route path="/quotes" component={AppLayout} />
-      <Route path="/invoices" component={AppLayout} />
-      <Route path="/estimates" component={AppLayout} />
+      <Route path="/jobs*" component={AppLayout} />
+      <Route path="/purchase-orders*" component={AppLayout} />
+      <Route path="/quotes*" component={AppLayout} />
+      <Route path="/invoices*" component={AppLayout} />
+      <Route path="/estimates*" component={AppLayout} />
       <Route path="/documents" component={AppLayout} />
       <Route path="/tracking" component={AppLayout} />
       <Route path="/contractors" component={AppLayout} />
