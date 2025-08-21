@@ -14,6 +14,9 @@ import Demo from "@/pages/Demo";
 import Invoices from "@/pages/Invoices";
 import Estimates from "@/pages/Estimates";
 import EstimatesSimple from "@/pages/EstimatesSimple";
+import EstimatesJoist from "@/pages/EstimatesJoist";
+import EstimateDetail from "@/pages/EstimateDetail";
+import EstimateBuilder from "@/pages/EstimateBuilder";
 import Documents from "@/pages/Documents";
 import Tracking from "@/pages/Tracking";
 import Contractors from "@/pages/Contractors";
@@ -108,8 +111,10 @@ function AppLayout() {
             <Route path="/purchase-orders/create" component={CreatePurchaseOrder} />
             <Route path="/quotes" component={Quotes} />
             <Route path="/invoices" component={Invoices} />
-            <Route path="/estimates" component={EstimatesSimple} />
-            <Route path="/estimates/new" component={EstimatesSimple} />
+            <Route path="/estimates" component={EstimatesJoist} />
+            <Route path="/estimates/new" component={EstimateBuilder} />
+            <Route path="/estimates/:id" component={EstimateDetail} />
+            <Route path="/estimates/:id/edit" component={EstimateBuilder} />
             <Route path="/documents" component={Documents} />
             <Route path="/tracking" component={Tracking} />
             <Route path="/contractors" component={Contractors} />
