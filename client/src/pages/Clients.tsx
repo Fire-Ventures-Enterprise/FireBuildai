@@ -9,8 +9,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall, Send, Camera } from "lucide-react";
+import { Star, Phone, Mail, MapPin, Plus, Eye, Search, User, DollarSign, Calendar, FileText, Building, MessageSquare, PhoneCall, Send, Camera, Receipt, Calculator } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -132,6 +133,7 @@ export default function Clients() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const deviceInfo = useDeviceDetection();
+  const [location, setLocation] = useLocation();
   
   const { data: clients, isLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
@@ -460,17 +462,46 @@ export default function Clients() {
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                          <span className="text-blue-700 dark:text-blue-300 font-semibold">
-                            {getInitials(client.name)}
-                          </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            <span className="text-blue-700 dark:text-blue-300 font-semibold">
+                              {getInitials(client.name)}
+                            </span>
+                          </div>
+                          <div>
+                            <DialogTitle>{client.name}</DialogTitle>
+                            <DialogDescription>
+                              Complete client information and document history
+                            </DialogDescription>
+                          </div>
                         </div>
-                        {client.name}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Complete client information and document history
-                      </DialogDescription>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              // Navigate to create estimate for this client
+                              setLocation(`/estimates/new?clientId=${client.id}`);
+                            }}
+                            data-testid={`button-create-estimate-${client.id}`}
+                          >
+                            <Calculator className="h-4 w-4 mr-2" />
+                            Create Estimate
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              // Navigate to create invoice for this client
+                              setLocation(`/invoices/new?clientId=${client.id}`);
+                            }}
+                            data-testid={`button-create-invoice-${client.id}`}
+                          >
+                            <Receipt className="h-4 w-4 mr-2" />
+                            Create Invoice
+                          </Button>
+                        </div>
+                      </div>
                     </DialogHeader>
                     
                     <Tabs defaultValue="overview" className="w-full">
