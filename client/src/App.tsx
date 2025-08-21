@@ -111,10 +111,8 @@ function AppLayout() {
             <Route path="/purchase-orders/create" component={CreatePurchaseOrder} />
             <Route path="/quotes" component={Quotes} />
             <Route path="/invoices" component={Invoices} />
-            <Route path="/estimates" component={EstimatesJoist} />
-            <Route path="/estimates/new" component={EstimateBuilder} />
-            <Route path="/estimates/:id" component={EstimateDetail} />
-            <Route path="/estimates/:id/edit" component={EstimateBuilder} />
+            <Route path="/estimates" component={EstimatesSimple} />
+            <Route path="/estimates/new" component={EstimatesSimple} />
             <Route path="/documents" component={Documents} />
             <Route path="/tracking" component={Tracking} />
             <Route path="/contractors" component={Contractors} />
