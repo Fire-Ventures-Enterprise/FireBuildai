@@ -165,13 +165,13 @@ export default function EstimateView() {
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Created:</span>
-                <span>{new Date(estimate.createdAt).toLocaleDateString()}</span>
+                <span>{estimate.createdAt ? new Date(estimate.createdAt).toLocaleDateString() : 'N/A'}</span>
               </div>
               
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Expires:</span>
                 <span className="font-medium">
-                  {new Date(estimate.expiresAt).toLocaleDateString()}
+                  {estimate.expiresAt ? new Date(estimate.expiresAt).toLocaleDateString() : 'N/A'}
                 </span>
               </div>
               
