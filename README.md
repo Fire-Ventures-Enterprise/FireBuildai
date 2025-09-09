@@ -1,4 +1,4 @@
-# FireBuildai - Contractor Management Platform
+# FireBuild.ai - Contractor Management Platform
 
 A comprehensive contractor management platform that provides real-time GPS tracking, automated expense processing, client communication tools, and business analytics for construction companies.
 
